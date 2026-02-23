@@ -6,6 +6,17 @@
 
 ---
 
+## TL;DR
+
+EU law (CRA, from 2027) requires software vendors to document what is inside their products.
+DX.Comply generates that document — a *Software Bill of Materials* — directly from your RAD Studio project in one click, in a format that satisfies the legal requirement.
+
+**You generate it. You archive it. You never have to submit it anywhere.**
+
+→ [Jump to Quick Start](#quick-start)
+
+---
+
 ## The problem, in plain language
 
 When you ship software to customers or the market, regulations increasingly require you to answer a simple question:
