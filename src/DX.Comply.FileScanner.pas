@@ -46,10 +46,13 @@ type
     FHashService: IHashService;
     FIncludePatterns: TArray<string>;
     FExcludePatterns: TArray<string>;
+    /// <summary>Cache of compiled regexes keyed by the regex string — avoids recompilation.</summary>
+    FRegexCache: TDictionary<string, TRegEx>;
     function MatchesPattern(const APath: string; const APatterns: TArray<string>): Boolean;
     function IsIncluded(const APath: string): Boolean;
     function IsExcluded(const APath: string): Boolean;
     function GlobToRegex(const AGlob: string): string;
+    function GetCachedRegex(const ARegexPattern: string): TRegEx;
   public
     /// <summary>
     /// Creates a new TFileScanner instance.
@@ -78,6 +81,7 @@ constructor TFileScanner.Create(const AHashService: IHashService);
 begin
   inherited Create;
   FHashService := AHashService;
+  FRegexCache := TDictionary<string, TRegEx>.Create;
 end;
 
 constructor TFileScanner.Create;
@@ -88,7 +92,20 @@ end;
 destructor TFileScanner.Destroy;
 begin
   FHashService := nil;
+  FRegexCache.Free;
   inherited;
+end;
+
+function TFileScanner.GetCachedRegex(const ARegexPattern: string): TRegEx;
+var
+  LRegex: TRegEx;
+begin
+  if not FRegexCache.TryGetValue(ARegexPattern, LRegex) then
+  begin
+    LRegex := TRegEx.Create(ARegexPattern, [roIgnoreCase]);
+    FRegexCache.Add(ARegexPattern, LRegex);
+  end;
+  Result := LRegex;
 end;
 
 function TFileScanner.GlobToRegex(const AGlob: string): string;
@@ -129,13 +146,13 @@ begin
     if (Pos('\', LNormalizedPattern) = 0) and (Pos('/', LPattern) = 0) then
       LRegex := '.*' + LRegex;
     try
-      if TRegEx.IsMatch(APath, LRegex, [roIgnoreCase]) then
+      if GetCachedRegex(LRegex).IsMatch(APath) then
       begin
         Result := True;
         Exit;
       end;
     except
-      // Invalid pattern, skip
+      // Invalid pattern — skip silently
     end;
   end;
 end;

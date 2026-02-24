@@ -299,10 +299,24 @@ begin
 
   DoProgress('Scanning project...', 10);
 
-  // Scan project
-  LProjectInfo := FProjectScanner.Scan(AProjectPath, FConfig.Platform, FConfig.Configuration);
+  // Scan project — initialize record so the outer finally can safely call Free
+  LProjectInfo := Default(TProjectInfo);
+  try
+    LProjectInfo := FProjectScanner.Scan(AProjectPath, FConfig.Platform, FConfig.Configuration);
+  except
+    on E: Exception do
+    begin
+      DoProgress('Error: Failed to read project file: ' + E.Message, -1);
+      Exit;
+    end;
+  end;
+
   try
     DoProgress('Scanning build output...', 30);
+
+    // Warn if output directory doesn't exist (artefacts not yet built)
+    if not TDirectory.Exists(LProjectInfo.OutputDir) then
+      DoProgress('Warning: Output directory not found: ' + LProjectInfo.OutputDir, 29);
 
     // Scan artefacts
     LArtefacts := FFileScanner.Scan(LProjectInfo.OutputDir,

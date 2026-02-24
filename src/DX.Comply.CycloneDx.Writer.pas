@@ -224,6 +224,13 @@ var
   I: Integer;
 begin
   Result := False;
+  if AOutputPath = '' then
+    Exit;
+
+  // Ensure output directory exists
+  var LOutputDir := TPath.GetDirectoryName(AOutputPath);
+  if (LOutputDir <> '') and not TDirectory.Exists(LOutputDir) then
+    TDirectory.CreateDirectory(LOutputDir);
 
   LRoot := TJSONObject.Create;
   try
@@ -272,18 +279,47 @@ end;
 function TCycloneDxJsonWriter.Validate(const AContent: string): Boolean;
 var
   LJson: TJSONObject;
+  LSerialNumber: string;
 begin
   Result := False;
+  if Trim(AContent) = '' then
+    Exit;
   try
     LJson := TJSONObject.ParseJSONValue(AContent) as TJSONObject;
     try
-      if Assigned(LJson) then
+      if not Assigned(LJson) then
+        Exit;
+
+      // bomFormat must be 'CycloneDX'
+      if (LJson.GetValue('bomFormat') = nil) or
+         (LJson.GetValue<string>('bomFormat') <> 'CycloneDX') then
+        Exit;
+
+      // specVersion must be present
+      if LJson.GetValue('specVersion') = nil then
+        Exit;
+
+      // serialNumber must be present and start with 'urn:uuid:'
+      if LJson.GetValue('serialNumber') <> nil then
       begin
-        // Basic validation: check required fields
-        Result := (LJson.GetValue('bomFormat') <> nil) and
-                  (LJson.GetValue('specVersion') <> nil) and
-                  (LJson.GetValue<string>('bomFormat') = 'CycloneDX');
+        LSerialNumber := LJson.GetValue<string>('serialNumber');
+        if not LSerialNumber.StartsWith('urn:uuid:') then
+          Exit;
       end;
+
+      // version must be a number
+      if LJson.GetValue('version') = nil then
+        Exit;
+
+      // components array must be present
+      if not (LJson.GetValue('components') is TJSONArray) then
+        Exit;
+
+      // metadata object must be present
+      if not (LJson.GetValue('metadata') is TJSONObject) then
+        Exit;
+
+      Result := True;
     finally
       LJson.Free;
     end;
