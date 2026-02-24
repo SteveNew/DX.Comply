@@ -1,0 +1,64 @@
+package DX.Comply.IDE;
+
+/// <summary>
+/// DX.Comply.IDE Package
+/// Delphi IDE integration package for DX.Comply SBOM generation.
+/// </summary>
+///
+/// <remarks>
+/// This design-time-only package installs TDxComplyWizard into the IDE,
+/// adding SBOM generation to the Help menu (via IOTAMenuWizard) and to
+/// the Project menu (via a directly injected TMenuItem).
+///
+/// All engine source units are compiled directly into this package to avoid
+/// a runtime package dependency on DX.Comply.Engine in the design-time context.
+/// </remarks>
+///
+/// <copyright>
+/// Copyright © 2026 Olaf Monien
+/// Licensed under MIT
+/// </copyright>
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'DX.Comply IDE Integration Package'}
+{$DESIGNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  vcl,
+  designide,
+  xmlrtl;
+
+contains
+  DX.Comply.Engine.Intf in 'DX.Comply.Engine.Intf.pas',
+  DX.Comply.ProjectScanner in 'DX.Comply.ProjectScanner.pas',
+  DX.Comply.FileScanner in 'DX.Comply.FileScanner.pas',
+  DX.Comply.HashService in 'DX.Comply.HashService.pas',
+  DX.Comply.CycloneDx.Writer in 'DX.Comply.CycloneDx.Writer.pas',
+  DX.Comply.Engine in 'DX.Comply.Engine.pas',
+  DX.Comply.IDE.Logger in 'DX.Comply.IDE.Logger.pas',
+  DX.Comply.IDE.Wizard in 'DX.Comply.IDE.Wizard.pas';
+
+end.

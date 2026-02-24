@@ -8,6 +8,12 @@
         <Projects Include="src\DX.Comply.Engine.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="src\DX.Comply.IDE.dproj">
+            <Dependencies>src\DX.Comply.Engine.dproj</Dependencies>
+        </Projects>
+        <Projects Include="tests\DX.Comply.Tests.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -31,7 +37,23 @@
     <Target Name="Engine_Release">
         <MSBuild Projects="src\DX.Comply.Engine.dproj" Properties="Config=Release"/>
     </Target>
+    <Target Name="IDE">
+        <MSBuild Projects="src\DX.Comply.IDE.dproj"/>
+    </Target>
+    <Target Name="IDE_Win32">
+        <MSBuild Projects="src\DX.Comply.IDE.dproj" Properties="Platform=Win32"/>
+    </Target>
+    <Target Name="IDE_Win64">
+        <MSBuild Projects="src\DX.Comply.IDE.dproj" Properties="Platform=Win64"/>
+    </Target>
+    <Target Name="IDE_Debug">
+        <MSBuild Projects="src\DX.Comply.IDE.dproj" Properties="Config=Debug"/>
+    </Target>
+    <Target Name="IDE_Release">
+        <MSBuild Projects="src\DX.Comply.IDE.dproj" Properties="Config=Release"/>
+    </Target>
     <Target Name="Build">
         <CallTarget Targets="Engine"/>
+        <CallTarget Targets="IDE"/>
     </Target>
 </Project>
