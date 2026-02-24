@@ -14,6 +14,9 @@
         <Projects Include="tests\DX.Comply.Tests.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="demo\ExampleApp\ExampleApp.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -52,8 +55,16 @@
     <Target Name="IDE_Release">
         <MSBuild Projects="src\DX.Comply.IDE.dproj" Properties="Config=Release"/>
     </Target>
+    <Target Name="ExampleApp">
+        <MSBuild Projects="demo\ExampleApp\ExampleApp.dproj"/>
+    </Target>
+    <Target Name="Tests">
+        <MSBuild Projects="tests\DX.Comply.Tests.dproj"/>
+    </Target>
     <Target Name="Build">
         <CallTarget Targets="Engine"/>
         <CallTarget Targets="IDE"/>
+        <CallTarget Targets="ExampleApp"/>
+        <CallTarget Targets="Tests"/>
     </Target>
 </Project>
