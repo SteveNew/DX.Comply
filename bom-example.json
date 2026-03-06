@@ -1,0 +1,177 @@
+﻿{
+  "$schema": "https://cyclonedx.org/schema/bom-1.5.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:31DC5B0C-7612-45A3-A335-09DB14894746",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-02-24T11:33:34.032+01:00",
+    "component": {
+      "type": "application",
+      "name": "DX.Comply.Engine",
+      "version": "1.0.0.0",
+      "bom-ref": "DX.Comply.Engine",
+      "supplier": {
+        "name": "Olaf Monien"
+      }
+    },
+    "tools": {
+      "components": [
+        {
+          "vendor": "Olaf Monien",
+          "name": "DX.Comply",
+          "version": "1.0.0"
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "DX.Comply.Engine.bpl",
+      "version": "83c527f9e22d",
+      "bom-ref": "comp-0",
+      "purl": "file:DX.Comply.Engine.bpl",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "83c527f9e22d2139d59da48cb5d7b27c41e409a167654aa6a23b47788cd3a550"
+        }
+      ],
+      "properties": [
+        {
+          "name": "file:size",
+          "value": "258048"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "dxcomply.exe",
+      "version": "e3b103433bed",
+      "bom-ref": "comp-1",
+      "purl": "file:dxcomply.exe",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e3b103433bed01dfe2611aa972b95334306e5cd16cc8aa8c900c82beb56b91f7"
+        }
+      ],
+      "properties": [
+        {
+          "name": "file:size",
+          "value": "1896448"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "ExampleApp.exe",
+      "version": "ea37b35ccae5",
+      "bom-ref": "comp-2",
+      "purl": "file:ExampleApp.exe",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ea37b35ccae5826a3114be6b369b6c3f93a1199dfd45f379c789ec9736499ce3"
+        }
+      ],
+      "properties": [
+        {
+          "name": "file:size",
+          "value": "1907712"
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "name": "DX.Comply.Engine.dcp",
+      "version": "d87f318b33b8",
+      "bom-ref": "comp-3",
+      "purl": "file:dcu\\\\DX.Comply.Engine.dcp",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "d87f318b33b8cbd1df09c252d9576f66c50aac3cc0a4e6f61978a648d17d0c76"
+        }
+      ],
+      "properties": [
+        {
+          "name": "file:size",
+          "value": "548832"
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "name": "DX.Comply.IDE.dcp",
+      "version": "0dce402a1f4f",
+      "bom-ref": "comp-4",
+      "purl": "file:dcu\\\\DX.Comply.IDE.dcp",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "0dce402a1f4f4e1c83de5a3633ceb81bd280f38200fd9cdc8c35cdccfb16013c"
+        }
+      ],
+      "properties": [
+        {
+          "name": "file:size",
+          "value": "557151"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "DX.Comply.IDE.bpl",
+      "version": "d1dbea3a64b1",
+      "bom-ref": "comp-5",
+      "purl": "file:DX.Comply.IDE.bpl",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "d1dbea3a64b116f067d2522c94cb0222001f2b70c2af9626a97a94687933a8c6"
+        }
+      ],
+      "properties": [
+        {
+          "name": "file:size",
+          "value": "288256"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "name": "DX.Comply.Tests.exe",
+      "version": "0a4a8b88c5ca",
+      "bom-ref": "comp-6",
+      "purl": "file:DX.Comply.Tests.exe",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "0a4a8b88c5caee6e7d2a59ae59b631c622a7eec875b0a7095350343c40144309"
+        }
+      ],
+      "properties": [
+        {
+          "name": "file:size",
+          "value": "2483200"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "DX.Comply.Engine",
+      "dependsOn": [
+        "comp-0",
+        "comp-1",
+        "comp-2",
+        "comp-3",
+        "comp-4",
+        "comp-5",
+        "comp-6"
+      ]
+    }
+  ]
+}

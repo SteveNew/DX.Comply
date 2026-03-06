@@ -97,6 +97,13 @@ packages/
 *.rar
 
 # =========================
+# GNU Global tags
+# =========================
+GPATH
+GRTAGS
+GTAGS
+
+# =========================
 # SBOM output (keep example)
 # =========================
 # bom.json

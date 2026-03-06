@@ -1,0 +1,74 @@
+﻿{
+  "$schema": "https://cyclonedx.org/schema/bom-1.5.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:14EACC9B-7CE1-4AB6-8502-527AFDE19374",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-02-24T11:26:37.750+01:00",
+    "component": {
+      "type": "application",
+      "name": "DX.Comply.Engine",
+      "version": "1.0.0.0",
+      "bom-ref": "DX.Comply.Engine"
+    },
+    "tools": {
+      "components": [
+        {
+          "vendor": "Olaf Monien",
+          "name": "DX.Comply",
+          "version": "1.0.0"
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "DX.Comply.Engine.bpl",
+      "version": "4aea69d33bec",
+      "bom-ref": "comp-0",
+      "purl": "file:DX.Comply.Engine.bpl",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "4aea69d33bec2280ab9859d270cd6f637ef1b879e21ec77c314e7501484356ba"
+        }
+      ],
+      "properties": [
+        {
+          "name": "file:size",
+          "value": "257536"
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "name": "DX.Comply.Engine.dcp",
+      "version": "89dcba9ee60e",
+      "bom-ref": "comp-1",
+      "purl": "file:dcu\\\\DX.Comply.Engine.dcp",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "89dcba9ee60e21332592798669779c4ac66363ef6d382ef66adae62f91265448"
+        }
+      ],
+      "properties": [
+        {
+          "name": "file:size",
+          "value": "548382"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "DX.Comply.Engine",
+      "dependsOn": [
+        "comp-0",
+        "comp-1"
+      ]
+    }
+  ]
+}
