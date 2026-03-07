@@ -93,6 +93,8 @@
         <DCCReference Include="DX.Comply.Tests.UnitResolver.pas"/>
         <DCCReference Include="DX.Comply.Tests.CycloneDx.Writer.pas"/>
         <DCCReference Include="DX.Comply.Tests.CycloneDx.XmlWriter.pas"/>
+        <DCCReference Include="DX.Comply.Tests.Report.MarkdownWriter.pas"/>
+        <DCCReference Include="DX.Comply.Tests.Report.HtmlWriter.pas"/>
         <DCCReference Include="DX.Comply.Tests.Spdx.Writer.pas"/>
         <DCCReference Include="DX.Comply.Tests.Schema.Validator.pas"/>
         <DCCReference Include="DX.Comply.Tests.IDE.Settings.pas"/>

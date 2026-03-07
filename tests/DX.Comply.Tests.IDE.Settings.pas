@@ -42,7 +42,8 @@ implementation
 uses
   System.SysUtils,
   System.IOUtils,
-  DX.Comply.IDE.Settings;
+  DX.Comply.IDE.Settings,
+  DX.Comply.Report.Intf;
 
 procedure TIDESettingsTests.Default_HasSafeAutomationDefaults;
 var
@@ -56,6 +57,8 @@ begin
   Assert.IsTrue(LSettings.ContinueWithoutDeepEvidenceOnBuildFailure);
   Assert.IsTrue(LSettings.WarnWhenCompositionEvidenceIsEmpty);
   Assert.AreEqual(0, LSettings.DelphiVersionOverride);
+  Assert.IsFalse(LSettings.HumanReadableReport.Enabled);
+  Assert.AreEqual(NativeInt(Ord(hrfMarkdown)), NativeInt(Ord(LSettings.HumanReadableReport.Format)));
 end;
 
 procedure TIDESettingsTests.LoadFromMissingFile_ReturnsDefaults;
@@ -67,6 +70,7 @@ begin
   LSettings := TDXComplyIDESettingsStore.LoadFromFile(LFilePath);
   Assert.AreEqual(Ord(abmDisabled), Ord(LSettings.AutoBuildMode));
   Assert.AreEqual('', LSettings.BuildScriptPath);
+  Assert.AreEqual('', LSettings.HumanReadableReport.OutputBasePath);
 end;
 
 procedure TIDESettingsTests.SaveToFile_ThenLoadFromFile_RoundTripsAllFields;
@@ -86,6 +90,12 @@ begin
     LSettings.WarnWhenCompositionEvidenceIsEmpty := False;
     LSettings.BuildScriptPath := 'C:\Tools\DelphiBuildDPROJ.ps1';
     LSettings.DelphiVersionOverride := 37;
+    LSettings.HumanReadableReport.Enabled := True;
+    LSettings.HumanReadableReport.Format := hrfBoth;
+    LSettings.HumanReadableReport.OutputBasePath := 'C:\Reports\demo.report';
+    LSettings.HumanReadableReport.IncludeWarnings := False;
+    LSettings.HumanReadableReport.IncludeCompositionEvidence := False;
+    LSettings.HumanReadableReport.IncludeBuildEvidence := False;
 
     TDXComplyIDESettingsStore.SaveToFile(LFilePath, LSettings);
     LLoadedSettings := TDXComplyIDESettingsStore.LoadFromFile(LFilePath);
@@ -98,6 +108,13 @@ begin
     Assert.IsFalse(LLoadedSettings.WarnWhenCompositionEvidenceIsEmpty);
     Assert.AreEqual(LSettings.BuildScriptPath, LLoadedSettings.BuildScriptPath);
     Assert.AreEqual(37, LLoadedSettings.DelphiVersionOverride);
+    Assert.IsTrue(LLoadedSettings.HumanReadableReport.Enabled);
+    Assert.AreEqual(NativeInt(Ord(hrfBoth)), NativeInt(Ord(LLoadedSettings.HumanReadableReport.Format)));
+    Assert.AreEqual(LSettings.HumanReadableReport.OutputBasePath,
+      LLoadedSettings.HumanReadableReport.OutputBasePath);
+    Assert.IsFalse(LLoadedSettings.HumanReadableReport.IncludeWarnings);
+    Assert.IsFalse(LLoadedSettings.HumanReadableReport.IncludeCompositionEvidence);
+    Assert.IsFalse(LLoadedSettings.HumanReadableReport.IncludeBuildEvidence);
   finally
     if TFile.Exists(LFilePath) then
       TFile.Delete(LFilePath);

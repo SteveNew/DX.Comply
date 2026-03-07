@@ -30,7 +30,8 @@ uses
   DUnitX.TestFramework,
   DX.Comply.BuildOrchestrator,
   DX.Comply.Engine,
-  DX.Comply.Engine.Intf;
+  DX.Comply.Engine.Intf,
+  DX.Comply.Report.Intf;
 
 type
   /// <summary>
@@ -100,6 +101,14 @@ type
     /// <summary>GenerateFromConfig with a missing config must fall back to defaults and succeed.</summary>
     [Test]
     procedure GenerateFromConfig_MissingConfig_UsesDefaults;
+
+    /// <summary>Generate with report settings must create a Markdown companion report.</summary>
+    [Test]
+    procedure Generate_WithHumanReadableMarkdownReport_WritesReportFile;
+
+    /// <summary>GenerateFromConfig must honor report settings for Markdown and HTML output.</summary>
+    [Test]
+    procedure GenerateFromConfig_ReportBoth_WritesMarkdownAndHtmlReports;
 
     // ---- TSbomConfig --------------------------------------------------------
 
@@ -328,6 +337,70 @@ begin
   end;
 end;
 
+procedure TEngineTests.Generate_WithHumanReadableMarkdownReport_WritesReportFile;
+var
+  LConfig: TSbomConfig;
+  LGen: TDxComplyGenerator;
+  LReportPath: string;
+begin
+  LReportPath := TPath.Combine(FTempDir, 'compliance.report.md');
+  LConfig := TSbomConfig.Default;
+  LConfig.HumanReadableReport.Enabled := True;
+  LConfig.HumanReadableReport.Format := hrfMarkdown;
+  LConfig.HumanReadableReport.OutputBasePath := TPath.Combine(FTempDir, 'compliance.report');
+
+  LGen := TDxComplyGenerator.Create(LConfig);
+  try
+    LGen.OnProgress := OnProgress;
+    Assert.IsTrue(LGen.Generate(FEngineDprojPath, FOutputFile));
+    Assert.IsTrue(TFile.Exists(LReportPath),
+      'Generate must create the configured Markdown companion report');
+  finally
+    LGen.Free;
+  end;
+end;
+
+procedure TEngineTests.GenerateFromConfig_ReportBoth_WritesMarkdownAndHtmlReports;
+var
+  LConfigJson: TStringList;
+  LConfigPath: string;
+  LGen: TDxComplyGenerator;
+  LReportBasePath: string;
+begin
+  LConfigPath := TPath.Combine(FTempDir, 'dxcomply.report.json');
+  LReportBasePath := TPath.Combine(FTempDir, 'auditor-report');
+  LConfigJson := TStringList.Create;
+  try
+    LConfigJson.Add('{');
+    LConfigJson.Add('  "outputPath": "' + StringReplace(FOutputFile, '\', '\\', [rfReplaceAll]) + '",');
+    LConfigJson.Add('  "format": "cyclonedx-json",');
+    LConfigJson.Add('  "report": {');
+    LConfigJson.Add('    "enabled": true,');
+    LConfigJson.Add('    "format": "both",');
+    LConfigJson.Add('    "output": "' + StringReplace(LReportBasePath, '\', '\\', [rfReplaceAll]) + '",');
+    LConfigJson.Add('    "includeWarnings": true,');
+    LConfigJson.Add('    "includeCompositionEvidence": true,');
+    LConfigJson.Add('    "includeBuildEvidence": true');
+    LConfigJson.Add('  }');
+    LConfigJson.Add('}');
+    LConfigJson.SaveToFile(LConfigPath, TEncoding.UTF8);
+
+    LGen := TDxComplyGenerator.Create;
+    try
+      LGen.OnProgress := OnProgress;
+      Assert.IsTrue(LGen.GenerateFromConfig(FEngineDprojPath, LConfigPath));
+      Assert.IsTrue(TFile.Exists(LReportBasePath + '.md'),
+        'GenerateFromConfig must create the configured Markdown report');
+      Assert.IsTrue(TFile.Exists(LReportBasePath + '.html'),
+        'GenerateFromConfig must create the configured HTML report');
+    finally
+      LGen.Free;
+    end;
+  finally
+    LConfigJson.Free;
+  end;
+end;
+
 // ---- TSbomConfig ------------------------------------------------------------
 
 procedure TEngineTests.Config_Default_HasCycloneDxJson;
@@ -361,6 +434,11 @@ begin
     'TSbomConfig.Default.DeepEvidenceBuildScriptPath must be empty');
   Assert.IsFalse(LConfig.WarnOnEmptyCompositionEvidence,
     'TSbomConfig.Default.WarnOnEmptyCompositionEvidence must be False');
+  Assert.IsFalse(LConfig.HumanReadableReport.Enabled,
+    'TSbomConfig.Default.HumanReadableReport.Enabled must be False');
+  Assert.AreEqual(NativeInt(Ord(hrfMarkdown)),
+    NativeInt(Ord(LConfig.HumanReadableReport.Format)),
+    'TSbomConfig.Default.HumanReadableReport.Format must be hrfMarkdown');
 end;
 
 initialization
