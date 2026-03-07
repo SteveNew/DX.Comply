@@ -22,7 +22,8 @@ uses
   Vcl.Controls,
   Vcl.Forms,
   Vcl.StdCtrls,
-  DX.Comply.IDE.Settings;
+  DX.Comply.IDE.Settings,
+  DX.Comply.Report.Intf;
 
 type
   /// <summary>
@@ -36,6 +37,12 @@ type
     FContinueOnBuildFailureCheckBox: TCheckBox;
     FDelphiVersionEdit: TEdit;
     FPromptBeforeBuildCheckBox: TCheckBox;
+    FReportEnabledCheckBox: TCheckBox;
+    FReportFormatComboBox: TComboBox;
+    FReportIncludeBuildEvidenceCheckBox: TCheckBox;
+    FReportIncludeCompositionCheckBox: TCheckBox;
+    FReportIncludeWarningsCheckBox: TCheckBox;
+    FReportOutputBasePathEdit: TEdit;
     FSaveAllModifiedFilesCheckBox: TCheckBox;
     FUseActiveBuildConfigurationCheckBox: TCheckBox;
     FWarnWhenCompositionEmptyCheckBox: TCheckBox;
@@ -71,7 +78,7 @@ begin
   Align := alClient;
   AutoScroll := True;
   Width := 660;
-  Height := 360;
+  Height := 560;
 
   LTop := 16;
 
@@ -100,6 +107,24 @@ begin
   FDelphiVersionEdit := TEdit.Create(Self);
   FDelphiVersionEdit.Parent := Self;
   CreateLabeledControl('Delphi version override (0 = auto)', FDelphiVersionEdit, LTop);
+
+  AddCheckBox('Generate an additional human-readable report', FReportEnabledCheckBox, LTop);
+
+  FReportFormatComboBox := TComboBox.Create(Self);
+  FReportFormatComboBox.Parent := Self;
+  FReportFormatComboBox.Style := csDropDownList;
+  FReportFormatComboBox.Items.Add('Markdown');
+  FReportFormatComboBox.Items.Add('HTML');
+  FReportFormatComboBox.Items.Add('Markdown + HTML');
+  CreateLabeledControl('Human-readable report format', FReportFormatComboBox, LTop);
+
+  FReportOutputBasePathEdit := TEdit.Create(Self);
+  FReportOutputBasePathEdit.Parent := Self;
+  CreateLabeledControl('Report output base path (optional)', FReportOutputBasePathEdit, LTop);
+
+  AddCheckBox('Include warnings in the human-readable report', FReportIncludeWarningsCheckBox, LTop);
+  AddCheckBox('Include composition evidence in the human-readable report', FReportIncludeCompositionCheckBox, LTop);
+  AddCheckBox('Include build evidence in the human-readable report', FReportIncludeBuildEvidenceCheckBox, LTop);
 end;
 
 procedure TFrameDXComplyOptions.AddCheckBox(const ACaption: string;
@@ -181,6 +206,17 @@ begin
   FWarnWhenCompositionEmptyCheckBox.Checked := ASettings.WarnWhenCompositionEvidenceIsEmpty;
   FBuildScriptPathEdit.Text := ASettings.BuildScriptPath;
   FDelphiVersionEdit.Text := IntToStr(ASettings.DelphiVersionOverride);
+  FReportEnabledCheckBox.Checked := ASettings.HumanReadableReport.Enabled;
+  case ASettings.HumanReadableReport.Format of
+    hrfHtml: FReportFormatComboBox.ItemIndex := 1;
+    hrfBoth: FReportFormatComboBox.ItemIndex := 2;
+  else
+    FReportFormatComboBox.ItemIndex := 0;
+  end;
+  FReportOutputBasePathEdit.Text := ASettings.HumanReadableReport.OutputBasePath;
+  FReportIncludeWarningsCheckBox.Checked := ASettings.HumanReadableReport.IncludeWarnings;
+  FReportIncludeCompositionCheckBox.Checked := ASettings.HumanReadableReport.IncludeCompositionEvidence;
+  FReportIncludeBuildEvidenceCheckBox.Checked := ASettings.HumanReadableReport.IncludeBuildEvidence;
 end;
 
 function TFrameDXComplyOptions.SaveSettings: TDXComplyIDESettings;
@@ -194,6 +230,17 @@ begin
   Result.WarnWhenCompositionEvidenceIsEmpty := FWarnWhenCompositionEmptyCheckBox.Checked;
   Result.BuildScriptPath := Trim(FBuildScriptPathEdit.Text);
   Result.DelphiVersionOverride := StrToIntDef(Trim(FDelphiVersionEdit.Text), -1);
+  Result.HumanReadableReport.Enabled := FReportEnabledCheckBox.Checked;
+  case FReportFormatComboBox.ItemIndex of
+    1: Result.HumanReadableReport.Format := hrfHtml;
+    2: Result.HumanReadableReport.Format := hrfBoth;
+  else
+    Result.HumanReadableReport.Format := hrfMarkdown;
+  end;
+  Result.HumanReadableReport.OutputBasePath := Trim(FReportOutputBasePathEdit.Text);
+  Result.HumanReadableReport.IncludeWarnings := FReportIncludeWarningsCheckBox.Checked;
+  Result.HumanReadableReport.IncludeCompositionEvidence := FReportIncludeCompositionCheckBox.Checked;
+  Result.HumanReadableReport.IncludeBuildEvidence := FReportIncludeBuildEvidenceCheckBox.Checked;
 end;
 
 function TFrameDXComplyOptions.ValidateSettings(out AMessage: string): Boolean;

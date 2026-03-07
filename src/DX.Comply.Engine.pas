@@ -45,6 +45,9 @@ uses
   DX.Comply.HashService,
   DX.Comply.CycloneDx.Writer,
   DX.Comply.CycloneDx.XmlWriter,
+  DX.Comply.Report.Intf,
+  DX.Comply.Report.MarkdownWriter,
+  DX.Comply.Report.HtmlWriter,
   DX.Comply.Spdx.Writer,
   DX.Comply.Schema.Validator;
 
@@ -81,6 +84,8 @@ type
     ContinueOnDeepEvidenceBuildFailure: Boolean;
     /// <summary>Emit a warning when no composition units could be resolved.</summary>
     WarnOnEmptyCompositionEvidence: Boolean;
+    /// <summary>Optional human-readable companion report settings.</summary>
+    HumanReadableReport: THumanReadableReportConfig;
     /// <summary>Creates a new TSbomConfig with default values.</summary>
     class function Default: TSbomConfig; static;
   end;
@@ -110,14 +115,26 @@ type
     procedure DoProgress(const AMessage: string; const AProgress: Integer);
     function LoadConfig(const AConfigPath: string): TSbomConfig;
     function CreateWriter(AFormat: TSbomFormat): ISbomWriter;
+    function CreateReportWriter(AFormat: THumanReadableReportFormat): IHumanReadableReportWriter;
     function BuildMetadata(const AConfig: TSbomConfig): TSbomMetadata;
+    function BuildHumanReadableReportData(const ASbomOutputPath: string; ASbomFormat: TSbomFormat;
+      const AMetadata: TSbomMetadata; const AProjectInfo: TProjectInfo;
+      const ABuildEvidence: TBuildEvidence; const ACompositionEvidence: TCompositionEvidence;
+      const AArtefacts: TArtefactList; const AWarnings: TList<string>;
+      const ADeepEvidenceBuildResult: TDeepEvidenceBuildResult;
+      const AValidationResult: TValidationResult): TComplianceReportData;
     function BuildDeepEvidenceOptions: TDeepEvidenceBuildOptions;
     function BuildEmptyCompositionWarning(const AProjectInfo: TProjectInfo;
       const ABuildEvidence: TBuildEvidence): string;
     function EnsureDeepEvidenceBuild(const AProjectInfo: TProjectInfo): TDeepEvidenceBuildResult;
+    function GenerateHumanReadableReports(const AData: TComplianceReportData;
+      out AGeneratedReportPaths: TArray<string>): Boolean;
     function ReadBuildEvidence(const AProjectInfo: TProjectInfo): TBuildEvidence;
     procedure ReportWarnings(const AWarnings, AReportedWarnings: TList<string>;
       const AProgress: Integer);
+    function ResolveReportOutputBasePath(const ASbomOutputPath: string): string;
+    function ResolveReportOutputPath(const AOutputBasePath: string;
+      AFormat: THumanReadableReportFormat): string;
     function ResolveCompositionEvidence(const AProjectInfo: TProjectInfo;
       const ABuildEvidence: TBuildEvidence): TCompositionEvidence;
   public
@@ -167,6 +184,9 @@ type
 
 implementation
 
+uses
+  DX.Comply.Report.Support;
+
 { TSbomConfig }
 
 class function TSbomConfig.Default: TSbomConfig;
@@ -180,6 +200,7 @@ begin
   Result.DeepEvidenceBuildScriptPath := '';
   Result.ContinueOnDeepEvidenceBuildFailure := False;
   Result.WarnOnEmptyCompositionEvidence := False;
+  Result.HumanReadableReport := THumanReadableReportConfig.Default;
   Result.ProductName := '';
   Result.ProductVersion := '';
   Result.Supplier := '';
@@ -233,6 +254,27 @@ begin
   Result.Mode := FConfig.DeepEvidenceMode;
   Result.DelphiVersion := FConfig.DeepEvidenceDelphiVersion;
   Result.BuildScriptPathOverride := FConfig.DeepEvidenceBuildScriptPath;
+end;
+
+function TDxComplyGenerator.BuildHumanReadableReportData(const ASbomOutputPath: string;
+  ASbomFormat: TSbomFormat; const AMetadata: TSbomMetadata;
+  const AProjectInfo: TProjectInfo; const ABuildEvidence: TBuildEvidence;
+  const ACompositionEvidence: TCompositionEvidence; const AArtefacts: TArtefactList;
+  const AWarnings: TList<string>; const ADeepEvidenceBuildResult: TDeepEvidenceBuildResult;
+  const AValidationResult: TValidationResult): TComplianceReportData;
+begin
+  Result := Default(TComplianceReportData);
+  Result.SbomOutputPath := ASbomOutputPath;
+  Result.SbomFormat := ASbomFormat;
+  Result.Metadata := AMetadata;
+  Result.ProjectInfo := AProjectInfo;
+  Result.BuildEvidence := ABuildEvidence;
+  Result.CompositionEvidence := ACompositionEvidence;
+  Result.Artefacts := AArtefacts;
+  Result.Warnings := AWarnings;
+  Result.DeepEvidenceRequested := FConfig.DeepEvidenceMode <> debDisabled;
+  Result.DeepEvidenceResult := ADeepEvidenceBuildResult;
+  Result.ValidationResult := AValidationResult;
 end;
 
 function TDxComplyGenerator.BuildEmptyCompositionWarning(const AProjectInfo: TProjectInfo;
@@ -332,6 +374,19 @@ begin
   end;
 end;
 
+function TDxComplyGenerator.CreateReportWriter(
+  AFormat: THumanReadableReportFormat): IHumanReadableReportWriter;
+begin
+  case AFormat of
+    hrfMarkdown:
+      Result := TMarkdownReportWriter.Create;
+    hrfHtml:
+      Result := THtmlReportWriter.Create;
+  else
+    Result := TMarkdownReportWriter.Create;
+  end;
+end;
+
 function TDxComplyGenerator.LoadConfig(const AConfigPath: string): TSbomConfig;
 var
   LJson: TJSONObject;
@@ -341,6 +396,8 @@ var
   LFormatStr: string;
   LModeStr: string;
   LProduct: TJSONObject;
+  LReport: TJSONObject;
+  LReportFormatStr: string;
   LWarnings: TJSONObject;
   I: Integer;
 begin
@@ -439,6 +496,33 @@ begin
             Result.WarnOnEmptyCompositionEvidence :=
               LWarnings.GetValue<Boolean>('warnOnEmptyCompositionEvidence');
         end;
+
+        if LJson.GetValue('report') is TJSONObject then
+        begin
+          LReport := LJson.GetValue('report') as TJSONObject;
+          if LReport.GetValue('enabled') <> nil then
+            Result.HumanReadableReport.Enabled := LReport.GetValue<Boolean>('enabled');
+          if LReport.GetValue('format') <> nil then
+          begin
+            LReportFormatStr := LowerCase(LReport.GetValue<string>('format'));
+            if LReportFormatStr = 'html' then
+              Result.HumanReadableReport.Format := hrfHtml
+            else if LReportFormatStr = 'both' then
+              Result.HumanReadableReport.Format := hrfBoth
+            else
+              Result.HumanReadableReport.Format := hrfMarkdown;
+          end;
+          if LReport.GetValue('output') <> nil then
+            Result.HumanReadableReport.OutputBasePath := LReport.GetValue<string>('output');
+          if LReport.GetValue('includeWarnings') <> nil then
+            Result.HumanReadableReport.IncludeWarnings := LReport.GetValue<Boolean>('includeWarnings');
+          if LReport.GetValue('includeCompositionEvidence') <> nil then
+            Result.HumanReadableReport.IncludeCompositionEvidence :=
+              LReport.GetValue<Boolean>('includeCompositionEvidence');
+          if LReport.GetValue('includeBuildEvidence') <> nil then
+            Result.HumanReadableReport.IncludeBuildEvidence :=
+              LReport.GetValue<Boolean>('includeBuildEvidence');
+        end;
       end;
     finally
       LJson.Free;
@@ -458,6 +542,51 @@ begin
   Result.ToolVersion := '1.0.0';
 end;
 
+function TDxComplyGenerator.GenerateHumanReadableReports(const AData: TComplianceReportData;
+  out AGeneratedReportPaths: TArray<string>): Boolean;
+var
+  LOutputBasePath: string;
+  LOutputPath: string;
+  LPaths: TList<string>;
+  LWriter: IHumanReadableReportWriter;
+  procedure GenerateOne(AFormat: THumanReadableReportFormat);
+  begin
+    LWriter := CreateReportWriter(AFormat);
+    LOutputPath := ResolveReportOutputPath(LOutputBasePath, AFormat);
+    DoProgress('Generating human-readable report (' +
+      HumanReadableReportFormatToString(AFormat) + ')...', 92);
+    if not LWriter.Write(LOutputPath, AData, FConfig.HumanReadableReport) then
+      raise Exception.Create('Failed to write human-readable report: ' + LOutputPath);
+
+    LPaths.Add(LOutputPath);
+    DoProgress('Human-readable report generated: ' + LOutputPath, 96);
+  end;
+begin
+  SetLength(AGeneratedReportPaths, 0);
+  if not FConfig.HumanReadableReport.Enabled then
+    Exit(True);
+
+  LOutputBasePath := ResolveReportOutputBasePath(AData.SbomOutputPath);
+  LPaths := TList<string>.Create;
+  try
+    case FConfig.HumanReadableReport.Format of
+      hrfMarkdown:
+        GenerateOne(hrfMarkdown);
+      hrfHtml:
+        GenerateOne(hrfHtml);
+      hrfBoth:
+      begin
+        GenerateOne(hrfMarkdown);
+        GenerateOne(hrfHtml);
+      end;
+    end;
+    AGeneratedReportPaths := LPaths.ToArray;
+    Result := True;
+  finally
+    LPaths.Free;
+  end;
+end;
+
 function TDxComplyGenerator.Generate(const AProjectPath, AOutputPath: string;
   AFormat: TSbomFormat): Boolean;
 var
@@ -469,7 +598,10 @@ var
   LMetadata: TSbomMetadata;
   LOutputPath: string;
   LFormat: TSbomFormat;
+  LGeneratedReportPaths: TArray<string>;
   LReportedWarnings: TList<string>;
+  LReportData: TComplianceReportData;
+  LValidation: TValidationResult;
 begin
   Result := False;
 
@@ -486,6 +618,8 @@ begin
   LProjectInfo := Default(TProjectInfo);
   LBuildEvidence := Default(TBuildEvidence);
   LCompositionEvidence := Default(TCompositionEvidence);
+  LDeepEvidenceBuildResult := Default(TDeepEvidenceBuildResult);
+  LValidation := TValidationResult.CreateValid;
   LReportedWarnings := TList<string>.Create;
   try
     LProjectInfo := FProjectScanner.Scan(AProjectPath, FConfig.Platform, FConfig.Configuration);
@@ -582,13 +716,32 @@ begin
       if Result then
       begin
         DoProgress('Validating SBOM...', 90);
-        // Post-write schema validation
-        var LValidation := ValidateSbom(LOutputPath);
+        LValidation := ValidateSbom(LOutputPath);
+
+        LReportData := BuildHumanReadableReportData(LOutputPath, LFormat, LMetadata,
+          LProjectInfo, LBuildEvidence, LCompositionEvidence, LArtefacts,
+          LReportedWarnings, LDeepEvidenceBuildResult, LValidation);
+        if not GenerateHumanReadableReports(LReportData, LGeneratedReportPaths) then
+        begin
+          DoProgress('Error: Failed to generate the configured human-readable report.', -1);
+          Exit(False);
+        end;
+
         if LValidation.IsValid then
-          DoProgress(Format('SBOM generated and validated: %s', [LOutputPath]), 100)
+        begin
+          if Length(LGeneratedReportPaths) > 0 then
+            DoProgress(Format('SBOM and %d human-readable report(s) generated and validated: %s',
+              [Length(LGeneratedReportPaths), LOutputPath]), 100)
+          else
+            DoProgress(Format('SBOM generated and validated: %s', [LOutputPath]), 100);
+        end
         else
         begin
-          DoProgress(Format('SBOM generated: %s (with validation warnings)', [LOutputPath]), 95);
+          if Length(LGeneratedReportPaths) > 0 then
+            DoProgress(Format('SBOM and human-readable report(s) generated: %s (with validation warnings)',
+              [LOutputPath]), 95)
+          else
+            DoProgress(Format('SBOM generated: %s (with validation warnings)', [LOutputPath]), 95);
           var LErr: string;
           for LErr in LValidation.Errors do
             DoProgress('Validation error: ' + LErr, -1);
@@ -620,6 +773,35 @@ end;
 function TDxComplyGenerator.ValidateProject(const AProjectPath: string): Boolean;
 begin
   Result := FProjectScanner.Validate(AProjectPath);
+end;
+
+function TDxComplyGenerator.ResolveReportOutputBasePath(
+  const ASbomOutputPath: string): string;
+begin
+  Result := Trim(FConfig.HumanReadableReport.OutputBasePath);
+  if Result = '' then
+    Exit(TPath.Combine(TPath.GetDirectoryName(ASbomOutputPath),
+      TPath.GetFileNameWithoutExtension(ASbomOutputPath) + '.report'));
+
+  if TPath.IsRelativePath(Result) then
+    Result := TPath.Combine(TPath.GetDirectoryName(ASbomOutputPath), Result);
+
+  if Result.EndsWith('.md', True) then
+    Exit(TPath.ChangeExtension(Result, ''));
+  if Result.EndsWith('.html', True) then
+    Exit(TPath.ChangeExtension(Result, ''));
+end;
+
+function TDxComplyGenerator.ResolveReportOutputPath(const AOutputBasePath: string;
+  AFormat: THumanReadableReportFormat): string;
+begin
+  Result := AOutputBasePath;
+  case AFormat of
+    hrfMarkdown:
+      Result := Result + '.md';
+    hrfHtml:
+      Result := Result + '.html';
+  end;
 end;
 
 function TDxComplyGenerator.ValidateSbom(const AFilePath: string): TValidationResult;

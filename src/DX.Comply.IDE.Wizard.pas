@@ -222,6 +222,7 @@ begin
   Result.ContinueOnDeepEvidenceBuildFailure :=
     ASettings.ContinueWithoutDeepEvidenceOnBuildFailure;
   Result.WarnOnEmptyCompositionEvidence := ASettings.WarnWhenCompositionEvidenceIsEmpty;
+  Result.HumanReadableReport := ASettings.HumanReadableReport;
 
   case ASettings.AutoBuildMode of
     abmWhenMapMissing: Result.DeepEvidenceMode := debWhenMapMissing;

@@ -18,7 +18,8 @@ unit DX.Comply.IDE.Settings;
 interface
 
 uses
-  System.SysUtils;
+  System.SysUtils,
+  DX.Comply.Report.Intf;
 
 type
   /// <summary>
@@ -38,6 +39,7 @@ type
     WarnWhenCompositionEvidenceIsEmpty: Boolean;
     BuildScriptPath: string;
     DelphiVersionOverride: Integer;
+    HumanReadableReport: THumanReadableReportConfig;
     class function Default: TDXComplyIDESettings; static;
   end;
 
@@ -49,7 +51,11 @@ type
     class function GetAppDataDirectory: string; static;
     class function GetDefaultFilePath: string; static;
     class function AutoBuildModeToString(const AValue: TIDEAutoBuildMode): string; static;
+    class function ReportFormatToString(
+      const AValue: THumanReadableReportFormat): string; static;
     class function StringToAutoBuildMode(const AValue: string): TIDEAutoBuildMode; static;
+    class function StringToReportFormat(
+      const AValue: string): THumanReadableReportFormat; static;
   public
     class function Load: TDXComplyIDESettings; static;
     class function LoadFromFile(const AFilePath: string): TDXComplyIDESettings; static;
@@ -79,6 +85,7 @@ begin
   Result.WarnWhenCompositionEvidenceIsEmpty := True;
   Result.BuildScriptPath := '';
   Result.DelphiVersionOverride := 0;
+  Result.HumanReadableReport := THumanReadableReportConfig.Default;
 end;
 
 { TDXComplyIDESettingsStore }
@@ -108,6 +115,17 @@ begin
   Result := TPath.Combine(GetAppDataDirectory, 'DX.Comply.IDE.ini');
 end;
 
+class function TDXComplyIDESettingsStore.ReportFormatToString(
+  const AValue: THumanReadableReportFormat): string;
+begin
+  case AValue of
+    hrfHtml: Result := 'html';
+    hrfBoth: Result := 'both';
+  else
+    Result := 'markdown';
+  end;
+end;
+
 class function TDXComplyIDESettingsStore.Load: TDXComplyIDESettings;
 begin
   Result := LoadFromFile(GetDefaultFilePath);
@@ -132,6 +150,12 @@ begin
     Result.WarnWhenCompositionEvidenceIsEmpty := LIniFile.ReadBool(cSettingsSection, 'WarnWhenCompositionEvidenceIsEmpty', Result.WarnWhenCompositionEvidenceIsEmpty);
     Result.BuildScriptPath := Trim(LIniFile.ReadString(cSettingsSection, 'BuildScriptPath', Result.BuildScriptPath));
     Result.DelphiVersionOverride := LIniFile.ReadInteger(cSettingsSection, 'DelphiVersionOverride', Result.DelphiVersionOverride);
+    Result.HumanReadableReport.Enabled := LIniFile.ReadBool(cSettingsSection, 'ReportEnabled', Result.HumanReadableReport.Enabled);
+    Result.HumanReadableReport.Format := StringToReportFormat(LIniFile.ReadString(cSettingsSection, 'ReportFormat', 'markdown'));
+    Result.HumanReadableReport.OutputBasePath := Trim(LIniFile.ReadString(cSettingsSection, 'ReportOutputBasePath', Result.HumanReadableReport.OutputBasePath));
+    Result.HumanReadableReport.IncludeWarnings := LIniFile.ReadBool(cSettingsSection, 'ReportIncludeWarnings', Result.HumanReadableReport.IncludeWarnings);
+    Result.HumanReadableReport.IncludeCompositionEvidence := LIniFile.ReadBool(cSettingsSection, 'ReportIncludeCompositionEvidence', Result.HumanReadableReport.IncludeCompositionEvidence);
+    Result.HumanReadableReport.IncludeBuildEvidence := LIniFile.ReadBool(cSettingsSection, 'ReportIncludeBuildEvidence', Result.HumanReadableReport.IncludeBuildEvidence);
   finally
     LIniFile.Free;
   end;
@@ -158,6 +182,12 @@ begin
     LIniFile.WriteBool(cSettingsSection, 'WarnWhenCompositionEvidenceIsEmpty', ASettings.WarnWhenCompositionEvidenceIsEmpty);
     LIniFile.WriteString(cSettingsSection, 'BuildScriptPath', Trim(ASettings.BuildScriptPath));
     LIniFile.WriteInteger(cSettingsSection, 'DelphiVersionOverride', ASettings.DelphiVersionOverride);
+    LIniFile.WriteBool(cSettingsSection, 'ReportEnabled', ASettings.HumanReadableReport.Enabled);
+    LIniFile.WriteString(cSettingsSection, 'ReportFormat', ReportFormatToString(ASettings.HumanReadableReport.Format));
+    LIniFile.WriteString(cSettingsSection, 'ReportOutputBasePath', Trim(ASettings.HumanReadableReport.OutputBasePath));
+    LIniFile.WriteBool(cSettingsSection, 'ReportIncludeWarnings', ASettings.HumanReadableReport.IncludeWarnings);
+    LIniFile.WriteBool(cSettingsSection, 'ReportIncludeCompositionEvidence', ASettings.HumanReadableReport.IncludeCompositionEvidence);
+    LIniFile.WriteBool(cSettingsSection, 'ReportIncludeBuildEvidence', ASettings.HumanReadableReport.IncludeBuildEvidence);
     LIniFile.UpdateFile;
   finally
     LIniFile.Free;
@@ -173,6 +203,17 @@ begin
     Exit(abmWhenMapMissing);
 
   Result := abmDisabled;
+end;
+
+class function TDXComplyIDESettingsStore.StringToReportFormat(
+  const AValue: string): THumanReadableReportFormat;
+begin
+  if SameText(AValue, 'html') then
+    Exit(hrfHtml);
+  if SameText(AValue, 'both') then
+    Exit(hrfBoth);
+
+  Result := hrfMarkdown;
 end;
 
 end.
