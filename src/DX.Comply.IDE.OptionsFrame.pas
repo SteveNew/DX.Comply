@@ -60,6 +60,8 @@ type
 
 implementation
 
+{$R *.dfm}
+
 uses
   System.IOUtils,
   System.SysUtils,
