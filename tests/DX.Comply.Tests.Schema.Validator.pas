@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// DX.Comply.Tests.Schema.Validator
 /// DUnitX tests for TSbomValidator.
 /// </summary>
@@ -214,7 +214,7 @@ var
 begin
   LResult := FValidator.ValidateCycloneDxJson(MakeValidCycloneDxJson);
   Assert.IsTrue(LResult.IsValid, 'Valid CycloneDX JSON should pass validation');
-  Assert.AreEqual(0, Length(LResult.Errors));
+  Assert.AreEqual(NativeInt(0), NativeInt(Length(LResult.Errors)));
 end;
 
 procedure TSchemaValidatorTests.CycloneDxJson_MissingBomFormat_ReportsError;
@@ -337,7 +337,7 @@ var
 begin
   LResult := FValidator.ValidateSpdxJson(MakeValidSpdxJson);
   Assert.IsTrue(LResult.IsValid, 'Valid SPDX JSON should pass validation');
-  Assert.AreEqual(0, Length(LResult.Errors));
+  Assert.AreEqual(NativeInt(0), NativeInt(Length(LResult.Errors)));
 end;
 
 procedure TSchemaValidatorTests.SpdxJson_WrongDataLicense_ReportsError;

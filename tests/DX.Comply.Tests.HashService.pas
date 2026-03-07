@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// DX.Comply.Tests.HashService
 /// DUnitX tests for THashService.
 /// </summary>
@@ -131,7 +131,7 @@ var
 begin
   LHash := FHashService.ComputeSha512(FTempFile);
   // Verify structural properties; the exact value is implementation-defined by the library
-  Assert.AreEqual(128, Length(LHash), 'SHA-512 hex string must be exactly 128 characters');
+  Assert.AreEqual(NativeInt(128), NativeInt(Length(LHash)), 'SHA-512 hex string must be exactly 128 characters');
   Assert.IsTrue(IsLowerHex(LowerCase(LHash)), 'SHA-512 result must be lowercase hexadecimal');
 end;
 
@@ -164,7 +164,7 @@ begin
   try
     TFile.WriteAllBytes(LEmptyFile, TBytes.Create());
     LHash := FHashService.ComputeSha256(LEmptyFile);
-    Assert.AreEqual(64, Length(LHash), 'SHA-256 of empty file must be a 64-char hex string');
+    Assert.AreEqual(NativeInt(64), NativeInt(Length(LHash)), 'SHA-256 of empty file must be a 64-char hex string');
     Assert.IsTrue(IsLowerHex(LowerCase(LHash)), 'SHA-256 of empty file must be lowercase hex');
   finally
     if TFile.Exists(LEmptyFile) then
@@ -208,7 +208,7 @@ begin
     TFile.WriteAllBytes(LBigFile, LData);
 
     LHash := FHashService.ComputeSha256(LBigFile);
-    Assert.AreEqual(64, Length(LHash), 'SHA-256 of 200 KB file must be a 64-char hex string');
+    Assert.AreEqual(NativeInt(64), NativeInt(Length(LHash)), 'SHA-256 of 200 KB file must be a 64-char hex string');
     Assert.IsTrue(IsLowerHex(LowerCase(LHash)), 'SHA-256 of 200 KB file must be lowercase hex');
   finally
     if TFile.Exists(LBigFile) then

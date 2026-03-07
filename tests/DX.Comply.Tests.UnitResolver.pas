@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// DX.Comply.Tests.UnitResolver
 /// DUnitX tests for TUnitResolver.
 /// </summary>
@@ -118,7 +118,7 @@ begin
 
     LCompositionEvidence := FResolver.Resolve(LProjectInfo, LBuildEvidence);
     try
-      Assert.AreEqual(3, LCompositionEvidence.Warnings.Count,
+      Assert.AreEqual(NativeInt(3), NativeInt(LCompositionEvidence.Warnings.Count),
         'Warnings from project and build evidence must be merged without duplicates');
       Assert.IsTrue(LCompositionEvidence.Warnings.Contains('Project warning'),
         'Project warnings must be preserved');
@@ -144,7 +144,7 @@ begin
   try
     LCompositionEvidence := FResolver.Resolve(LProjectInfo, LBuildEvidence);
     try
-      Assert.AreEqual(0, LCompositionEvidence.Units.Count,
+      Assert.AreEqual(NativeInt(0), NativeInt(LCompositionEvidence.Units.Count),
         'The initial resolver slice must return an empty unit list until unit closure logic exists');
     finally
       LCompositionEvidence.Free;
@@ -178,7 +178,7 @@ begin
 
     LCompositionEvidence := FResolver.Resolve(LProjectInfo, LBuildEvidence);
     try
-      Assert.AreEqual(2, LCompositionEvidence.Units.Count,
+      Assert.AreEqual(NativeInt(2), NativeInt(LCompositionEvidence.Units.Count),
         'Map-file evidence items must be transformed into resolved units');
       Assert.AreEqual('DX.Comply.Engine', LCompositionEvidence.Units[0].UnitName,
         'The first resolved unit must come from the first map evidence item');

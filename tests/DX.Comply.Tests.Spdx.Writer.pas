@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// DX.Comply.Tests.Spdx.Writer
 /// DUnitX tests for TSpdxJsonWriter.
 /// </summary>
@@ -267,7 +267,7 @@ begin
   LJson := LoadOutputJson;
   try
     LPackages := LJson.GetValue('packages') as TJSONArray;
-    Assert.AreEqual(1, LPackages.Count);
+    Assert.AreEqual(NativeInt(1), NativeInt(LPackages.Count));
     Assert.AreEqual('MyApp.exe', (LPackages.Items[0] as TJSONObject).GetValue<string>('name'));
   finally
     LJson.Free;
@@ -287,7 +287,7 @@ begin
   try
     LPackage := (LJson.GetValue('packages') as TJSONArray).Items[0] as TJSONObject;
     LChecksums := LPackage.GetValue('checksums') as TJSONArray;
-    Assert.AreEqual(1, LChecksums.Count);
+    Assert.AreEqual(NativeInt(1), NativeInt(LChecksums.Count));
     Assert.AreEqual('SHA256',
       (LChecksums.Items[0] as TJSONObject).GetValue<string>('algorithm'));
   finally

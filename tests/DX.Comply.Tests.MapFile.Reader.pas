@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// DX.Comply.Tests.MapFile.Reader
 /// DUnitX tests for TMapFileReader.
 /// </summary>
@@ -59,7 +59,7 @@ begin
     TFile.WriteAllText(LMapFilePath, LMapContent, TEncoding.UTF8);
     LUnitNames := TMapFileReader.ReadUnitNames(LMapFilePath);
 
-    Assert.AreEqual(2, Length(LUnitNames),
+    Assert.AreEqual(NativeInt(2), NativeInt(Length(LUnitNames)),
       'The map file reader must return unique unit names only once');
     Assert.AreEqual('DX.Comply.Engine', LUnitNames[0],
       'The first extracted unit name must match the first line-number section');

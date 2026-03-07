@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// DX.Comply.Tests.FileScanner
 /// DUnitX tests for TFileScanner.
 /// </summary>
@@ -197,7 +197,7 @@ begin
   LScanner := TFileScanner.Create;
   LResult := LScanner.Scan('C:\this\path\does\not\exist', [], []);
   try
-    Assert.AreEqual(0, LResult.Count, 'Scanning a non-existent directory must return an empty list');
+    Assert.AreEqual(NativeInt(0), NativeInt(LResult.Count), 'Scanning a non-existent directory must return an empty list');
   finally
     LResult.Free;
   end;
@@ -215,7 +215,7 @@ begin
   LScanner := TFileScanner.Create;
   LResult := LScanner.Scan(LEmptyDir, [], []);
   try
-    Assert.AreEqual(0, LResult.Count, 'Scanning an empty directory must return an empty list');
+    Assert.AreEqual(NativeInt(0), NativeInt(LResult.Count), 'Scanning an empty directory must return an empty list');
   finally
     LResult.Free;
   end;
@@ -297,7 +297,7 @@ begin
   LScanner := TFileScanner.Create(FHashService);
   LResult := LScanner.Scan(FTempDir, ['*.exe'], []);
   try
-    Assert.AreEqual(1, LResult.Count, 'Exactly one .exe must be found');
+    Assert.AreEqual(NativeInt(1), NativeInt(LResult.Count), 'Exactly one .exe must be found');
     LArtefact := FindArtefact(LResult, 'test.exe');
     Assert.AreEqual(Int64(5), LArtefact.FileSize, 'FileSize of the 5-byte exe fixture must be 5');
   finally

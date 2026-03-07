@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// DX.Comply.ProjectScanner
 /// Scans and parses Delphi .dproj project files.
 /// </summary>
@@ -138,6 +138,7 @@ procedure TProjectScanner.AddDelimitedValues(const AValue: string; const AValues
   const AProjectDir, AProjectName: string; ANormalizeAsPath: Boolean);
 var
   LItem: string;
+  LResolvedItem: string;
   LItems: TArray<string>;
 begin
   if not Assigned(AValues) then
@@ -149,28 +150,28 @@ begin
   LItems := AValue.Split([';']);
   for LItem in LItems do
   begin
-    LItem := Trim(LItem);
-    if LItem = '' then
+    LResolvedItem := Trim(LItem);
+    if LResolvedItem = '' then
       Continue;
 
-    if LItem[1] = '$' then
+    if LResolvedItem[1] = '$' then
       Continue;
 
     if ANormalizeAsPath then
     begin
-      LItem := NormalizePath(LItem, AProjectName);
-      if (LItem <> '') and TPath.IsRelativePath(LItem) then
-        LItem := TPath.Combine(AProjectDir, LItem);
+      LResolvedItem := NormalizePath(LResolvedItem, AProjectName);
+      if (LResolvedItem <> '') and TPath.IsRelativePath(LResolvedItem) then
+        LResolvedItem := TPath.Combine(AProjectDir, LResolvedItem);
 
       try
-        LItem := TPath.GetFullPath(LItem);
+        LResolvedItem := TPath.GetFullPath(LResolvedItem);
       except
-        FWarnings.Add('Could not resolve search path: ' + LItem);
+        FWarnings.Add('Could not resolve search path: ' + LResolvedItem);
       end;
     end;
 
-    if not AValues.Contains(LItem) then
-      AValues.Add(LItem);
+    if not AValues.Contains(LResolvedItem) then
+      AValues.Add(LResolvedItem);
   end;
 end;
 
@@ -559,9 +560,12 @@ end;
 function TProjectScanner.Scan(const AProjectPath, APlatform, AConfiguration: string): TProjectInfo;
 var
   LBplOutputDir: string;
+  LDetectedPlatform: string;
+  LHasMatchingPlatform: Boolean;
   LDcpOutputDir: string;
   LDcuOutputDir: string;
   LExeOutputDir: string;
+  LTargetedPlatforms: TArray<string>;
   LVersionStr: string;
   LMajor, LMinor, LRelease, LBuild: string;
   LWarning: string;
@@ -588,6 +592,21 @@ begin
 
     // Load the .dproj file with BOM-aware encoding detection
     LoadProjectFile(AProjectPath);
+
+    LTargetedPlatforms := DetectTargetedPlatforms;
+    LHasMatchingPlatform := False;
+    for LDetectedPlatform in LTargetedPlatforms do
+    begin
+      if SameText(LDetectedPlatform, Result.Platform) then
+      begin
+        LHasMatchingPlatform := True;
+        Break;
+      end;
+    end;
+
+    if not LHasMatchingPlatform then
+      FWarnings.Add('Requested platform "' + Result.Platform +
+        '" is not listed in TargetedPlatforms.');
 
     // Detect the Cfg_N key for the requested configuration
     FConfigKey := DetectConfigKey(FCurrentConfig);

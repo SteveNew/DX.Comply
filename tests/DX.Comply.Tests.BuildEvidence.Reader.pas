@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// DX.Comply.Tests.BuildEvidence.Reader
 /// DUnitX tests for TBuildEvidenceReader.
 /// </summary>
@@ -125,13 +125,13 @@ begin
 
     LBuildEvidence := FReader.Read(LProjectInfo);
     try
-      Assert.AreEqual(2, LBuildEvidence.SearchPaths.Count,
+      Assert.AreEqual(NativeInt(2), NativeInt(LBuildEvidence.SearchPaths.Count),
         'SearchPaths must be copied to build evidence');
-      Assert.AreEqual(2, LBuildEvidence.UnitScopeNames.Count,
+      Assert.AreEqual(NativeInt(2), NativeInt(LBuildEvidence.UnitScopeNames.Count),
         'UnitScopeNames must be copied to build evidence');
-      Assert.AreEqual(2, LBuildEvidence.RuntimePackages.Count,
+      Assert.AreEqual(NativeInt(2), NativeInt(LBuildEvidence.RuntimePackages.Count),
         'RuntimePackages must be copied to build evidence');
-      Assert.AreEqual(1, LBuildEvidence.Warnings.Count,
+      Assert.AreEqual(NativeInt(1), NativeInt(LBuildEvidence.Warnings.Count),
         'Warnings must be copied to build evidence');
       Assert.AreEqual('Synthetic warning', LBuildEvidence.Warnings[0],
         'Warnings must preserve the original text');

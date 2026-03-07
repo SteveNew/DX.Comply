@@ -134,7 +134,7 @@ begin
       'A missing map file must trigger a Deep-Evidence build plan');
     Assert.AreEqual('C:\Repo\build\DelphiBuildDPROJ.ps1', LPlan.ScriptPath,
       'The build script path must resolve relative to the repository root');
-    Assert.AreEqual(1, Length(LPlan.AdditionalMSBuildProperties),
+    Assert.AreEqual(NativeInt(1), NativeInt(Length(LPlan.AdditionalMSBuildProperties)),
       'The plan must append one MSBuild property to force detailed map generation');
     Assert.AreEqual('DCC_MapFile=3', LPlan.AdditionalMSBuildProperties[0],
       'The build plan must force detailed map generation');
