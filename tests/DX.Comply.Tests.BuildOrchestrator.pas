@@ -1,0 +1,153 @@
+﻿/// <summary>
+/// DX.Comply.Tests.BuildOrchestrator
+/// DUnitX tests for TBuildOrchestrator.
+/// </summary>
+///
+/// <remarks>
+/// Covers deterministic Deep-Evidence build-plan construction without relying
+/// on a local Delphi installation.
+/// </remarks>
+///
+/// <copyright>
+/// Copyright © 2026 Olaf Monien
+/// Licensed under MIT
+/// </copyright>
+
+unit DX.Comply.Tests.BuildOrchestrator;
+
+interface
+
+uses
+  DUnitX.TestFramework,
+  DX.Comply.BuildOrchestrator,
+  DX.Comply.Engine.Intf;
+
+type
+  /// <summary>
+  /// DUnitX fixture for the Deep-Evidence build orchestrator.
+  /// </summary>
+  [TestFixture]
+  TBuildOrchestratorTests = class
+  private
+    FBuildOrchestrator: IBuildOrchestrator;
+  public
+    [Setup]
+    procedure Setup;
+
+    /// <summary>
+    /// Disabled Deep-Evidence builds must not produce an execution plan.
+    /// </summary>
+    [Test]
+    procedure CreatePlan_DeepEvidenceDisabled_SkipsExecution;
+
+    /// <summary>
+    /// A missing map file must produce a build plan that forces detailed map generation.
+    /// </summary>
+    [Test]
+    procedure CreatePlan_MapMissing_ForcesDetailedMapBuild;
+
+    /// <summary>
+    /// An existing map file must prevent a redundant build execution.
+    /// </summary>
+    [Test]
+    procedure CreatePlan_MapExists_SkipsExecution;
+  end;
+
+implementation
+
+uses
+  System.IOUtils,
+  System.SysUtils;
+
+procedure TBuildOrchestratorTests.Setup;
+begin
+  FBuildOrchestrator := TBuildOrchestrator.Create;
+end;
+
+procedure TBuildOrchestratorTests.CreatePlan_DeepEvidenceDisabled_SkipsExecution;
+var
+  LPlan: TDeepEvidenceBuildPlan;
+  LProjectInfo: TProjectInfo;
+begin
+  LProjectInfo := TProjectInfo.Create;
+  try
+    LProjectInfo.ProjectPath := 'C:\Repo\src\DX.Comply.Engine.dproj';
+    LProjectInfo.ProjectDir := 'C:\Repo\src';
+    LProjectInfo.Platform := 'Win32';
+    LProjectInfo.Configuration := 'Debug';
+    LProjectInfo.MapFilePath := 'C:\Repo\build\Win32\Debug\DX.Comply.Engine.map';
+
+    LPlan := FBuildOrchestrator.CreatePlan(LProjectInfo, False, 0);
+
+    Assert.IsFalse(LPlan.ShouldExecute,
+      'Disabled Deep-Evidence builds must not produce an execution plan');
+  finally
+    LProjectInfo.Free;
+  end;
+end;
+
+procedure TBuildOrchestratorTests.CreatePlan_MapExists_SkipsExecution;
+var
+  LPlan: TDeepEvidenceBuildPlan;
+  LMapFilePath: string;
+  LProjectInfo: TProjectInfo;
+begin
+  LMapFilePath := TPath.GetTempFileName;
+  try
+    LProjectInfo := TProjectInfo.Create;
+    try
+      LProjectInfo.ProjectPath := 'C:\Repo\src\DX.Comply.Engine.dproj';
+      LProjectInfo.ProjectDir := 'C:\Repo\src';
+      LProjectInfo.Platform := 'Win32';
+      LProjectInfo.Configuration := 'Debug';
+      LProjectInfo.MapFilePath := LMapFilePath;
+
+      LPlan := FBuildOrchestrator.CreatePlan(LProjectInfo, True, 0);
+
+      Assert.IsFalse(LPlan.ShouldExecute,
+        'An existing map file must suppress a redundant Deep-Evidence build');
+    finally
+      LProjectInfo.Free;
+    end;
+  finally
+    if TFile.Exists(LMapFilePath) then
+      TFile.Delete(LMapFilePath);
+  end;
+end;
+
+procedure TBuildOrchestratorTests.CreatePlan_MapMissing_ForcesDetailedMapBuild;
+var
+  LPlan: TDeepEvidenceBuildPlan;
+  LProjectInfo: TProjectInfo;
+begin
+  LProjectInfo := TProjectInfo.Create;
+  try
+    LProjectInfo.ProjectPath := 'C:\Repo\src\DX.Comply.Engine.dproj';
+    LProjectInfo.ProjectDir := 'C:\Repo\src';
+    LProjectInfo.Platform := 'Win64';
+    LProjectInfo.Configuration := 'Release';
+    LProjectInfo.MapFilePath := 'C:\Repo\build\Win64\Release\DX.Comply.Engine.map';
+
+    LPlan := FBuildOrchestrator.CreatePlan(LProjectInfo, True, 13);
+
+    Assert.IsTrue(LPlan.ShouldExecute,
+      'A missing map file must trigger a Deep-Evidence build plan');
+    Assert.AreEqual('C:\Repo\build\DelphiBuildDPROJ.ps1', LPlan.ScriptPath,
+      'The build script path must resolve relative to the repository root');
+    Assert.AreEqual(1, Length(LPlan.AdditionalMSBuildProperties),
+      'The plan must append one MSBuild property to force detailed map generation');
+    Assert.AreEqual('DCC_MapFile=3', LPlan.AdditionalMSBuildProperties[0],
+      'The build plan must force detailed map generation');
+    Assert.IsTrue(Pos('-DelphiVersion 13', LPlan.CommandLine) > 0,
+      'The requested Delphi version must be forwarded into the build command line');
+    Assert.IsTrue(Pos('-AdditionalMSBuildProperties "DCC_MapFile=3"', LPlan.CommandLine) > 0,
+      'The command line must forward the detailed map property to the build script');
+  finally
+    LProjectInfo.Free;
+  end;
+end;
+
+initialization
+  TDUnitX.RegisterTestFixture(TBuildOrchestratorTests);
+
+end.

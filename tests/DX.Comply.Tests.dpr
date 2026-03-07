@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// DX.Comply.Tests
 /// DUnitX console test runner for DX.Comply.
 /// </summary>
@@ -27,6 +27,7 @@ uses
   DUnitX.Loggers.XML.NUnit,
   DX.Comply.Tests.BuildEvidence.Intf in 'DX.Comply.Tests.BuildEvidence.Intf.pas',
   DX.Comply.Tests.BuildEvidence.Reader in 'DX.Comply.Tests.BuildEvidence.Reader.pas',
+  DX.Comply.Tests.BuildOrchestrator in 'DX.Comply.Tests.BuildOrchestrator.pas',
   DX.Comply.Tests.HashService in 'DX.Comply.Tests.HashService.pas',
   DX.Comply.Tests.FileScanner in 'DX.Comply.Tests.FileScanner.pas',
   DX.Comply.Tests.MapFile.Reader in 'DX.Comply.Tests.MapFile.Reader.pas',

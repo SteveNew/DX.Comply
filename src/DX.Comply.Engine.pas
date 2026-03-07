@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// DX.Comply.Engine
 /// Main facade for DX.Comply SBOM generation.
 /// </summary>
@@ -37,6 +37,7 @@ uses
   System.Generics.Collections,
   DX.Comply.Engine.Intf,
   DX.Comply.BuildEvidence.Intf,
+  DX.Comply.BuildOrchestrator,
   DX.Comply.BuildEvidence.Reader,
   DX.Comply.UnitResolver,
   DX.Comply.ProjectScanner,
@@ -70,6 +71,10 @@ type
     Platform: string;
     /// <summary>Build configuration.</summary>
     Configuration: string;
+    /// <summary>If true, explicitly trigger a build to collect Deep-Evidence inputs.</summary>
+    DeepEvidenceBuild: Boolean;
+    /// <summary>Optional Delphi major version to use for the Deep-Evidence build.</summary>
+    DeepEvidenceDelphiVersion: Integer;
     /// <summary>Creates a new TSbomConfig with default values.</summary>
     class function Default: TSbomConfig; static;
   end;
@@ -89,6 +94,7 @@ type
   private
     FProjectScanner: IProjectScanner;
     FBuildEvidenceReader: IBuildEvidenceReader;
+    FBuildOrchestrator: IBuildOrchestrator;
     FUnitResolver: IUnitResolver;
     FFileScanner: IFileScanner;
     FHashService: IHashService;
@@ -99,6 +105,7 @@ type
     function LoadConfig(const AConfigPath: string): TSbomConfig;
     function CreateWriter(AFormat: TSbomFormat): ISbomWriter;
     function BuildMetadata(const AConfig: TSbomConfig): TSbomMetadata;
+    function EnsureDeepEvidenceBuild(const AProjectInfo: TProjectInfo): TDeepEvidenceBuildResult;
     function ReadBuildEvidence(const AProjectInfo: TProjectInfo): TBuildEvidence;
     function ResolveCompositionEvidence(const AProjectInfo: TProjectInfo;
       const ABuildEvidence: TBuildEvidence): TCompositionEvidence;
@@ -157,6 +164,8 @@ begin
   Result.Format := sfCycloneDxJson;
   Result.Platform := 'Win32';
   Result.Configuration := 'Release';
+  Result.DeepEvidenceBuild := False;
+  Result.DeepEvidenceDelphiVersion := 0;
   Result.ProductName := '';
   Result.ProductVersion := '';
   Result.Supplier := '';
@@ -172,6 +181,7 @@ begin
   FConfig := TSbomConfig.Default;
   FProjectScanner := TProjectScanner.Create;
   FBuildEvidenceReader := TBuildEvidenceReader.Create;
+  FBuildOrchestrator := TBuildOrchestrator.Create;
   FUnitResolver := TUnitResolver.Create;
   FHashService := THashService.Create;
   FFileScanner := TFileScanner.Create(FHashService);
@@ -187,6 +197,7 @@ destructor TDxComplyGenerator.Destroy;
 begin
   FProjectScanner := nil;
   FBuildEvidenceReader := nil;
+  FBuildOrchestrator := nil;
   FUnitResolver := nil;
   FFileScanner := nil;
   FHashService := nil;
@@ -200,6 +211,20 @@ begin
     Result := FBuildEvidenceReader.Read(AProjectInfo)
   else
     Result := TBuildEvidence.Create;
+end;
+
+function TDxComplyGenerator.EnsureDeepEvidenceBuild(
+  const AProjectInfo: TProjectInfo): TDeepEvidenceBuildResult;
+begin
+  if Assigned(FBuildOrchestrator) then
+    Result := FBuildOrchestrator.EnsureDeepEvidenceBuild(AProjectInfo,
+      FConfig.DeepEvidenceBuild, FConfig.DeepEvidenceDelphiVersion)
+  else
+  begin
+    Result := Default(TDeepEvidenceBuildResult);
+    Result.Success := True;
+    Result.Message := 'No build orchestrator assigned.';
+  end;
 end;
 
 function TDxComplyGenerator.ResolveCompositionEvidence(const AProjectInfo: TProjectInfo;
@@ -296,6 +321,16 @@ begin
           if LProduct.GetValue('supplier') <> nil then
             Result.Supplier := LProduct.GetValue<string>('supplier');
         end;
+
+        // Deep Evidence
+        if LJson.GetValue('deepEvidence') is TJSONObject then
+        begin
+          var LDeepEvidence := LJson.GetValue('deepEvidence') as TJSONObject;
+          if LDeepEvidence.GetValue('build') <> nil then
+            Result.DeepEvidenceBuild := LDeepEvidence.GetValue<Boolean>('build');
+          if LDeepEvidence.GetValue('delphiVersion') <> nil then
+            Result.DeepEvidenceDelphiVersion := LDeepEvidence.GetValue<Integer>('delphiVersion');
+        end;
       end;
     finally
       LJson.Free;
@@ -318,6 +353,7 @@ end;
 function TDxComplyGenerator.Generate(const AProjectPath, AOutputPath: string;
   AFormat: TSbomFormat): Boolean;
 var
+  LDeepEvidenceBuildResult: TDeepEvidenceBuildResult;
   LProjectInfo: TProjectInfo;
   LBuildEvidence: TBuildEvidence;
   LCompositionEvidence: TCompositionEvidence;
@@ -352,6 +388,22 @@ begin
   end;
 
   try
+    if FConfig.DeepEvidenceBuild then
+    begin
+      DoProgress('Ensuring Deep-Evidence build...', 15);
+      LDeepEvidenceBuildResult := EnsureDeepEvidenceBuild(LProjectInfo);
+      if not LDeepEvidenceBuildResult.Success then
+      begin
+        DoProgress('Error: ' + LDeepEvidenceBuildResult.Message, -1);
+        Exit;
+      end;
+
+      if LDeepEvidenceBuildResult.Executed then
+        DoProgress('Deep-Evidence build completed.', 18)
+      else
+        DoProgress(LDeepEvidenceBuildResult.Message, 18);
+    end;
+
     DoProgress('Preparing build evidence...', 20);
     LBuildEvidence := ReadBuildEvidence(LProjectInfo);
     DoProgress(Format('Collected %d build evidence item(s)',

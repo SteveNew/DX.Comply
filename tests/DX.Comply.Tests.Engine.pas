@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// DX.Comply.Tests.Engine
 /// DUnitX tests for TDxComplyGenerator (engine facade).
 /// </summary>
@@ -109,6 +109,10 @@ type
     /// <summary>TSbomConfig.Default.OutputPath must be 'bom.json'.</summary>
     [Test]
     procedure Config_Default_OutputPathIsBomJson;
+
+    /// <summary>Deep-Evidence builds must be disabled by default.</summary>
+    [Test]
+    procedure Config_Default_DeepEvidenceBuildDisabled;
   end;
 
 implementation
@@ -341,6 +345,17 @@ begin
   LConfig := TSbomConfig.Default;
   Assert.AreEqual('bom.json', LConfig.OutputPath,
     'TSbomConfig.Default.OutputPath must be ''bom.json''');
+end;
+
+procedure TEngineTests.Config_Default_DeepEvidenceBuildDisabled;
+var
+  LConfig: TSbomConfig;
+begin
+  LConfig := TSbomConfig.Default;
+  Assert.IsFalse(LConfig.DeepEvidenceBuild,
+    'TSbomConfig.Default.DeepEvidenceBuild must be False');
+  Assert.AreEqual(0, LConfig.DeepEvidenceDelphiVersion,
+    'TSbomConfig.Default.DeepEvidenceDelphiVersion must be 0');
 end;
 
 initialization
