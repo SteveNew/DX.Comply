@@ -1,145 +1,200 @@
-object FormDXComplyBuildConfirmationDialog: TFormDXComplyBuildConfirmationDialog
+﻿object FormDXComplyBuildConfirmationDialog: TFormDXComplyBuildConfirmationDialog
   Left = 0
   Top = 0
+  Margins.Left = 6
+  Margins.Top = 6
+  Margins.Right = 6
+  Margins.Bottom = 6
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'DX.Comply CRA Compliance Generation'
-  ClientHeight = 316
-  ClientWidth = 640
+  ClientHeight = 632
+  ClientWidth = 1280
   Color = clBtnFace
-  Constraints.MinHeight = 316
-  Constraints.MinWidth = 640
+  Constraints.MinHeight = 632
+  Constraints.MinWidth = 1280
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -12
+  Font.Height = -24
   Font.Name = 'Segoe UI'
   Font.Style = []
-  OldCreateOrder = False
   Position = poScreenCenter
-  Scaled = True
-  PixelsPerInch = 96
-  TextHeight = 15
+  PixelsPerInch = 192
+  DesignSize = (
+    1280
+    632)
+  TextHeight = 32
   object TitleLabel: TLabel
-    Left = 20
-    Top = 20
-    Width = 376
-    Height = 25
+    Left = 40
+    Top = 40
+    Width = 1012
+    Height = 51
+    Margins.Left = 6
+    Margins.Top = 6
+    Margins.Right = 6
+    Margins.Bottom = 6
     Caption = 'Generate CRA compliance documentation with DX.Comply'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -19
+    Font.Height = -38
     Font.Name = 'Segoe UI Semibold'
     Font.Style = [fsBold]
     ParentFont = False
   end
   object DescriptionLabel: TLabel
-    Left = 20
-    Top = 58
-    Width = 600
-    Height = 40
+    Left = 40
+    Top = 116
+    Width = 1200
+    Height = 80
+    Margins.Left = 6
+    Margins.Top = 6
+    Margins.Right = 6
+    Margins.Bottom = 6
     AutoSize = False
-    Caption =
-      'DX.Comply will run a dedicated Deep-Evidence build with detailed MAP generation before creating the SBOM and the companion compliance report.'
+    Caption = 
+      'DX.Comply will run a dedicated Deep-Evidence build with detailed' +
+      ' MAP generation before creating the SBOM and the companion compl' +
+      'iance report.'
     WordWrap = True
   end
   object ProjectCaptionLabel: TLabel
-    Left = 20
-    Top = 122
-    Width = 41
-    Height = 15
+    Left = 40
+    Top = 244
+    Width = 82
+    Height = 32
+    Margins.Left = 6
+    Margins.Top = 6
+    Margins.Right = 6
+    Margins.Bottom = 6
     Caption = 'Project:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -12
+    Font.Height = -24
     Font.Name = 'Segoe UI Semibold'
     Font.Style = [fsBold]
     ParentFont = False
   end
   object ProjectValueLabel: TLabel
-    Left = 140
-    Top = 122
-    Width = 480
-    Height = 15
+    Left = 280
+    Top = 244
+    Width = 960
+    Height = 32
+    Margins.Left = 6
+    Margins.Top = 6
+    Margins.Right = 6
+    Margins.Bottom = 6
     AutoSize = False
     Caption = 'ProjectValueLabel'
   end
   object ConfigurationCaptionLabel: TLabel
-    Left = 20
-    Top = 150
-    Width = 78
-    Height = 15
+    Left = 40
+    Top = 300
+    Width = 156
+    Height = 32
+    Margins.Left = 6
+    Margins.Top = 6
+    Margins.Right = 6
+    Margins.Bottom = 6
     Caption = 'Configuration:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -12
+    Font.Height = -24
     Font.Name = 'Segoe UI Semibold'
     Font.Style = [fsBold]
     ParentFont = False
   end
   object ConfigurationValueLabel: TLabel
-    Left = 140
-    Top = 150
-    Width = 480
-    Height = 15
+    Left = 280
+    Top = 300
+    Width = 960
+    Height = 32
+    Margins.Left = 6
+    Margins.Top = 6
+    Margins.Right = 6
+    Margins.Bottom = 6
     AutoSize = False
     Caption = 'ConfigurationValueLabel'
   end
   object PlatformCaptionLabel: TLabel
-    Left = 20
-    Top = 178
-    Width = 47
-    Height = 15
+    Left = 40
+    Top = 356
+    Width = 100
+    Height = 32
+    Margins.Left = 6
+    Margins.Top = 6
+    Margins.Right = 6
+    Margins.Bottom = 6
     Caption = 'Platform:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -12
+    Font.Height = -24
     Font.Name = 'Segoe UI Semibold'
     Font.Style = [fsBold]
     ParentFont = False
   end
   object PlatformValueLabel: TLabel
-    Left = 140
-    Top = 178
-    Width = 480
-    Height = 15
+    Left = 280
+    Top = 356
+    Width = 960
+    Height = 32
+    Margins.Left = 6
+    Margins.Top = 6
+    Margins.Right = 6
+    Margins.Bottom = 6
     AutoSize = False
     Caption = 'PlatformValueLabel'
   end
   object MapCaptionLabel: TLabel
-    Left = 20
-    Top = 206
-    Width = 92
-    Height = 15
+    Left = 40
+    Top = 412
+    Width = 203
+    Height = 32
+    Margins.Left = 6
+    Margins.Top = 6
+    Margins.Right = 6
+    Margins.Bottom = 6
     Caption = 'Expected MAP file:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -12
+    Font.Height = -24
     Font.Name = 'Segoe UI Semibold'
     Font.Style = [fsBold]
     ParentFont = False
   end
   object MapValueLabel: TLabel
-    Left = 140
-    Top = 206
-    Width = 480
-    Height = 36
+    Left = 280
+    Top = 412
+    Width = 960
+    Height = 72
+    Margins.Left = 6
+    Margins.Top = 6
+    Margins.Right = 6
+    Margins.Bottom = 6
     AutoSize = False
     Caption = 'MapValueLabel'
     WordWrap = True
   end
   object DisablePromptCheckBox: TCheckBox
-    Left = 20
-    Top = 258
-    Width = 280
-    Height = 21
+    Left = 40
+    Top = 516
+    Width = 560
+    Height = 42
+    Margins.Left = 6
+    Margins.Top = 6
+    Margins.Right = 6
+    Margins.Bottom = 6
     Caption = 'Do not show this confirmation again'
     TabOrder = 0
   end
   object OkButton: TButton
-    Left = 444
-    Top = 270
-    Width = 88
-    Height = 30
+    Left = 888
+    Top = 540
+    Width = 176
+    Height = 60
+    Margins.Left = 6
+    Margins.Top = 6
+    Margins.Right = 6
+    Margins.Bottom = 6
     Anchors = [akRight, akBottom]
     Caption = 'OK'
     Default = True
@@ -147,10 +202,14 @@ object FormDXComplyBuildConfirmationDialog: TFormDXComplyBuildConfirmationDialog
     TabOrder = 1
   end
   object CancelButton: TButton
-    Left = 544
-    Top = 270
-    Width = 88
-    Height = 30
+    Left = 1088
+    Top = 540
+    Width = 176
+    Height = 60
+    Margins.Left = 6
+    Margins.Top = 6
+    Margins.Right = 6
+    Margins.Bottom = 6
     Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Cancel'

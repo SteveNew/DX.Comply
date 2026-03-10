@@ -90,6 +90,8 @@
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="vcl.dcp"/>
+        <DCCReference Include="vclie.dcp"/>
+        <DCCReference Include="vcledge.dcp"/>
         <DCCReference Include="designide.dcp"/>
         <DCCReference Include="xmlrtl.dcp"/>
         <DCCReference Include="DX.Comply.Engine.Intf.pas"/>
@@ -114,6 +116,7 @@
         <DCCReference Include="DX.Comply.IDE.AboutDialog.pas"/>
         <DCCReference Include="DX.Comply.IDE.PathSupport.pas"/>
         <DCCReference Include="DX.Comply.IDE.ReadmeSupport.pas"/>
+        <DCCReference Include="DX.Comply.IDE.BuildConfirmationDialog.pas"/>
         <DCCReference Include="DX.Comply.IDE.Settings.pas"/>
         <DCCReference Include="DX.Comply.IDE.OptionsFrame.pas"/>
         <DCCReference Include="DX.Comply.IDE.Options.pas"/>

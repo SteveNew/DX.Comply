@@ -19,8 +19,6 @@ interface
 
 uses
   System.Classes,
-  System.Variants,
-  Winapi.ActiveX,
   Vcl.ComCtrls,
   Vcl.Controls,
   Vcl.ExtCtrls,
@@ -61,14 +59,14 @@ type
     FAboutButton: TButton;
   private
     FReadmeBrowser: TWebBrowser;
-    FReadmeHtml: string;
-    FReadmeHtmlLoaded: Boolean;
     procedure AboutButtonClick(Sender: TObject);
     procedure BrowseScriptButtonClick(Sender: TObject);
     procedure InitializeReadmeBrowser;
     procedure LoadReadmeInfoPage;
-    procedure ReadmeBrowserDocumentComplete(ASender: TObject;
-      const pDisp: IDispatch; const URL: OleVariant);
+    /// <summary>
+    /// Returns the cached temporary HTML file used by the embedded README preview.
+    /// </summary>
+    function GetReadmePreviewFilePath: string;
   public
     /// <summary>
     /// Returns the caption used for the single DX.Comply node in the IDE options tree.
@@ -143,38 +141,24 @@ begin
   FReadmeBrowser.Align := alClient;
   FReadmeBrowser.TabStop := False;
   FReadmeBrowser.Silent := True;
-  FReadmeBrowser.OnDocumentComplete := ReadmeBrowserDocumentComplete;
+end;
+
+function TFrameDXComplyOptions.GetReadmePreviewFilePath: string;
+begin
+  Result := TPath.Combine(TPath.GetTempPath, 'DX.Comply');
+  TDirectory.CreateDirectory(Result);
+  Result := TPath.Combine(Result, 'readme-preview.html');
 end;
 
 procedure TFrameDXComplyOptions.LoadReadmeInfoPage;
-begin
-  FReadmeHtml := BuildDXComplyReadmeHtmlDocument;
-  FReadmeHtmlLoaded := False;
-  if Assigned(FReadmeBrowser) then
-    FReadmeBrowser.Navigate('about:blank');
-end;
-
-procedure TFrameDXComplyOptions.ReadmeBrowserDocumentComplete(ASender: TObject;
-  const pDisp: IDispatch; const URL: OleVariant);
 var
-  LDocument: OleVariant;
-  LUrl: string;
+  LPreviewFilePath: string;
 begin
-  if FReadmeHtmlLoaded or (Trim(FReadmeHtml) = '') then
-    Exit;
-
-  LUrl := VarToStrDef(URL, '');
-  if (LUrl <> '') and not SameText(LUrl, 'about:blank') then
-    Exit;
-
-  if not Assigned(FReadmeBrowser.Document) then
-    Exit;
-
-  LDocument := FReadmeBrowser.Document;
-  FReadmeHtmlLoaded := True;
-  LDocument.Open;
-  LDocument.Write(VarArrayOf([FReadmeHtml]));
-  LDocument.Close;
+  LPreviewFilePath := GetReadmePreviewFilePath;
+  TFile.WriteAllText(LPreviewFilePath, BuildDXComplyReadmeHtmlDocument,
+    TEncoding.UTF8);
+  if Assigned(FReadmeBrowser) then
+    FReadmeBrowser.Navigate(LPreviewFilePath);
 end;
 
 procedure TFrameDXComplyOptions.LoadSettings(const ASettings: TDXComplyIDESettings);

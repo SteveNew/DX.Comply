@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// DX.Comply.IDE.BuildConfirmationDialog
 /// Provides the confirmation dialog shown before a Deep-Evidence IDE build starts.
 /// </summary>
@@ -21,7 +21,7 @@ uses
   Vcl.Forms,
   Vcl.StdCtrls,
   Vcl.Controls,
-  DX.Comply.BuildOrchestrator;
+  DX.Comply.BuildOrchestrator, System.Classes;
 
 type
   /// <summary>
