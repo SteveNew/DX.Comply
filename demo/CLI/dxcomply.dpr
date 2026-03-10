@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// dxcomply
 /// Command-line entry point for DX.Comply SBOM generation.
 /// </summary>
@@ -51,14 +51,15 @@ end;
 // ---------------------------------------------------------------------------
 
 var
-  LNoPause: Boolean;
   LOptions: TCliOptions;
   LGenerator: TDxComplyGenerator;
   LConfig: TSbomConfig;
   LSuccess: Boolean;
+  {$IFNDEF CI}
+  LNoPause: Boolean;
+  {$ENDIF}
 
 begin
-  LNoPause := False;
   LOptions := TCliOptions.Create;
   try
     if not LOptions.Parse then
@@ -86,8 +87,10 @@ begin
       Exit;
     end;
 
-    // Capture before the try/finally so it is accessible after LOptions.Free
+    {$IFNDEF CI}
+    // Capture before the try/finally so it is accessible after LOptions.Free.
     LNoPause := LOptions.NoPause;
+    {$ENDIF}
     LConfig  := LOptions.ToSbomConfig;
 
     LGenerator := TDxComplyGenerator.Create(LConfig);

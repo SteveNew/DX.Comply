@@ -12,6 +12,9 @@
         <Projects Include="tests\DX.Comply.Tests.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="demo\CLI\dxcomply.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -47,14 +50,23 @@
     <Target Name="DX_Comply_Tests:Make">
         <MSBuild Projects="tests\DX.Comply.Tests.dproj" Targets="Make"/>
     </Target>
+    <Target Name="dxcomply">
+        <MSBuild Projects="demo\CLI\dxcomply.dproj"/>
+    </Target>
+    <Target Name="dxcomply:Clean">
+        <MSBuild Projects="demo\CLI\dxcomply.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="dxcomply:Make">
+        <MSBuild Projects="demo\CLI\dxcomply.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="DX_Comply_Engine;DX_Comply_IDE;DX_Comply_Tests"/>
+        <CallTarget Targets="DX_Comply_Engine;DX_Comply_IDE;DX_Comply_Tests;dxcomply"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="DX_Comply_Engine:Clean;DX_Comply_IDE:Clean;DX_Comply_Tests:Clean"/>
+        <CallTarget Targets="DX_Comply_Engine:Clean;DX_Comply_IDE:Clean;DX_Comply_Tests:Clean;dxcomply:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="DX_Comply_Engine:Make;DX_Comply_IDE:Make;DX_Comply_Tests:Make"/>
+        <CallTarget Targets="DX_Comply_Engine:Make;DX_Comply_IDE:Make;DX_Comply_Tests:Make;dxcomply:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
