@@ -131,6 +131,18 @@ type
   /// <summary>
   /// SBOM metadata for the generated document.
   /// </summary>
+  TSbomProperty = record
+    /// <summary>Property name written into the SBOM.</summary>
+    Name: string;
+    /// <summary>Property value written into the SBOM.</summary>
+    Value: string;
+    /// <summary>Creates one SBOM metadata property entry.</summary>
+    class function Create(const AName, AValue: string): TSbomProperty; static;
+  end;
+
+  /// <summary>
+  /// SBOM metadata for the generated document.
+  /// </summary>
   TSbomMetadata = record
     /// <summary>Product name.</summary>
     ProductName: string;
@@ -144,6 +156,10 @@ type
     ToolName: string;
     /// <summary>Tool version.</summary>
     ToolVersion: string;
+    /// <summary>Additional DX.Comply BOM metadata properties for the formal SBOM.</summary>
+    Properties: TArray<TSbomProperty>;
+    /// <summary>Additional DX.Comply component properties for metadata.component.</summary>
+    ComponentProperties: TArray<TSbomProperty>;
   end;
 
   /// <summary>
@@ -244,6 +260,14 @@ type
   end;
 
 implementation
+
+{ TSbomProperty }
+
+class function TSbomProperty.Create(const AName, AValue: string): TSbomProperty;
+begin
+  Result.Name := AName;
+  Result.Value := AValue;
+end;
 
 { TProjectInfo }
 

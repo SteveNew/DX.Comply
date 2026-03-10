@@ -57,6 +57,7 @@ function DelphiRuntimeUnitsText(const AProjectInfo: TProjectInfo): string;
 function HumanReadableReportTitle: string;
 function HumanReadableReportSubtitle: string;
 function HumanReadableReportGenerator: string;
+function RelativeOutputReference(const ABaseFilePath, ATargetFilePath: string): string;
 function RepositoryReferenceText(const AProjectInfo: TProjectInfo): string;
 function BuildConsolidatedUnitEvidenceRows(
   const AData: TComplianceReportData): TConsolidatedUnitEvidenceRowList;
@@ -108,15 +109,34 @@ begin
   Result := 'DX.Comply';
 end;
 
+function RelativeOutputReference(const ABaseFilePath, ATargetFilePath: string): string;
+var
+  LBaseDirectory: string;
+begin
+  if Trim(ATargetFilePath) = '' then
+    Exit('n/a');
+
+  LBaseDirectory := TPath.GetDirectoryName(ABaseFilePath);
+  if Trim(LBaseDirectory) = '' then
+    Result := TPath.GetFileName(ATargetFilePath)
+  else
+    Result := ExtractRelativePath(IncludeTrailingPathDelimiter(LBaseDirectory), ATargetFilePath);
+
+  if Trim(Result) = '' then
+    Result := TPath.GetFileName(ATargetFilePath);
+
+  Result := StringReplace(Result, '\', '/', [rfReplaceAll]);
+end;
+
 function HumanReadableReportSubtitle: string;
 begin
-  Result := 'This Software Release Assessment summarizes the generated Software Bill of Materials (SBOM), build evidence and deliverable artefacts for the assessed release. ' +
+  Result := 'This DX.Comply Software Release Assessment summarizes the generated Software Bill of Materials (SBOM), build evidence and deliverable artefacts for the assessed release. ' +
     'It serves as the human-readable companion to the formal SBOM output for review, audit and release approval activities.';
 end;
 
 function HumanReadableReportTitle: string;
 begin
-  Result := 'Software Release Assessment (SRA) and SBOM Compliance Report';
+  Result := 'DX.Comply Software Release Assessment (SRA) and SBOM Compliance Report';
 end;
 
 function HumanReadableReportFormatToString(AValue: THumanReadableReportFormat): string;

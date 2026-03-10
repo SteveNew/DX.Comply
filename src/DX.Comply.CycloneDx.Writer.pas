@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// DX.Comply.CycloneDx.Writer
 /// Generates CycloneDX 1.5 SBOM documents in JSON format.
 /// </summary>
@@ -47,6 +47,7 @@ type
   private
     function GenerateUuid: string;
     function BuildMetadata(const AMetadata: TSbomMetadata; const AProjectInfo: TProjectInfo): TJSONObject;
+    function BuildProperties(const AProperties: TArray<TSbomProperty>): TJSONArray;
     function BuildComponent(const AArtefact: TArtefactInfo; const AIndex: Integer): TJSONObject;
     function BuildDependencies(const AArtefacts: TArtefactList; const AProjectBomRef: string): TJSONArray;
     function EscapeJsonString(const AValue: string): string;
@@ -85,6 +86,25 @@ begin
   Result := StringReplace(Result, #9, '\t', [rfReplaceAll]);
 end;
 
+function TCycloneDxJsonWriter.BuildProperties(
+  const AProperties: TArray<TSbomProperty>): TJSONArray;
+var
+  LProperty: TSbomProperty;
+  LPropertyObject: TJSONObject;
+begin
+  Result := TJSONArray.Create;
+  for LProperty in AProperties do
+  begin
+    if Trim(LProperty.Name) = '' then
+      Continue;
+
+    LPropertyObject := TJSONObject.Create;
+    LPropertyObject.AddPair('name', EscapeJsonString(LProperty.Name));
+    LPropertyObject.AddPair('value', EscapeJsonString(LProperty.Value));
+    Result.Add(LPropertyObject);
+  end;
+end;
+
 function TCycloneDxJsonWriter.BuildMetadata(const AMetadata: TSbomMetadata;
   const AProjectInfo: TProjectInfo): TJSONObject;
 var
@@ -114,7 +134,13 @@ begin
     LComponent.AddPair('supplier', LSupplier);
   end;
 
+  if Length(AMetadata.ComponentProperties) > 0 then
+    LComponent.AddPair('properties', BuildProperties(AMetadata.ComponentProperties));
+
   LMetadata.AddPair('component', LComponent);
+
+  if Length(AMetadata.Properties) > 0 then
+    LMetadata.AddPair('properties', BuildProperties(AMetadata.Properties));
 
   // Tool information
   LTool := TJSONObject.Create;

@@ -116,7 +116,10 @@ type
     function LoadConfig(const AConfigPath: string): TSbomConfig;
     function CreateWriter(AFormat: TSbomFormat): ISbomWriter;
     function CreateReportWriter(AFormat: THumanReadableReportFormat): IHumanReadableReportWriter;
-    function BuildMetadata(const AConfig: TSbomConfig): TSbomMetadata;
+    function BuildMetadata(const AConfig: TSbomConfig; const AProjectInfo: TProjectInfo;
+      const ABuildEvidence: TBuildEvidence; const ACompositionEvidence: TCompositionEvidence;
+      const AWarnings: TList<string>;
+      const ADeepEvidenceBuildResult: TDeepEvidenceBuildResult): TSbomMetadata;
     function BuildHumanReadableReportData(const ASbomOutputPath: string; ASbomFormat: TSbomFormat;
       const AMetadata: TSbomMetadata; const AProjectInfo: TProjectInfo;
       const ABuildEvidence: TBuildEvidence; const ACompositionEvidence: TCompositionEvidence;
@@ -532,7 +535,76 @@ begin
   end;
 end;
 
-function TDxComplyGenerator.BuildMetadata(const AConfig: TSbomConfig): TSbomMetadata;
+function TDxComplyGenerator.BuildMetadata(const AConfig: TSbomConfig;
+  const AProjectInfo: TProjectInfo; const ABuildEvidence: TBuildEvidence;
+  const ACompositionEvidence: TCompositionEvidence; const AWarnings: TList<string>;
+  const ADeepEvidenceBuildResult: TDeepEvidenceBuildResult): TSbomMetadata;
+var
+  LBomProperties: TList<TSbomProperty>;
+  LComponentProperties: TList<TSbomProperty>;
+
+  const
+    cPropertyNamespace = 'net.developer-experts.dx-comply';
+
+  function PropertyName(const AGroup, AName: string): string;
+  begin
+    Result := cPropertyNamespace + ':' + AGroup + '.' + AName;
+  end;
+
+  procedure AddBomProperty(const AName, AValue: string);
+  begin
+    if (Trim(AName) = '') or (Trim(AValue) = '') then
+      Exit;
+    LBomProperties.Add(TSbomProperty.Create(AName, AValue));
+  end;
+
+  procedure AddComponentProperty(const AName, AValue: string);
+  begin
+    if (Trim(AName) = '') or (Trim(AValue) = '') then
+      Exit;
+    LComponentProperties.Add(TSbomProperty.Create(AName, AValue));
+  end;
+
+  function BoolToMetadataValue(const AValue: Boolean): string;
+  begin
+    if AValue then
+      Result := 'true'
+    else
+      Result := 'false';
+  end;
+
+  function DcuModeToMetadataValue: string;
+  begin
+    if AProjectInfo.UsesDebugDCUs then
+      Result := 'debug'
+    else
+      Result := 'release';
+  end;
+
+  function DeepEvidenceModeToMetadataValue: string;
+  begin
+    case FConfig.DeepEvidenceMode of
+      debAlways:
+        Result := 'always';
+      debWhenMapMissing:
+        Result := 'when-map-missing';
+    else
+      Result := 'disabled';
+    end;
+  end;
+
+  function EffectiveMapFilePath: string;
+  begin
+    Result := Trim(ADeepEvidenceBuildResult.MapFilePath);
+    if Result <> '' then
+      Exit;
+
+    Result := Trim(ABuildEvidence.Paths.MapFilePath);
+    if Result <> '' then
+      Exit;
+
+    Result := Trim(AProjectInfo.MapFilePath);
+  end;
 begin
   Result.ProductName := AConfig.ProductName;
   Result.ProductVersion := AConfig.ProductVersion;
@@ -540,6 +612,50 @@ begin
   Result.Timestamp := DateToISO8601(Now, False);
   Result.ToolName := 'DX.Comply';
   Result.ToolVersion := '1.0.0';
+
+  LBomProperties := TList<TSbomProperty>.Create;
+  LComponentProperties := TList<TSbomProperty>.Create;
+  try
+    AddBomProperty(PropertyName('document', 'profile'), 'cra-compliance-assessment');
+    AddBomProperty(PropertyName('deep-evidence', 'mode'), DeepEvidenceModeToMetadataValue);
+    AddBomProperty(PropertyName('deep-evidence', 'requested'),
+      BoolToMetadataValue(FConfig.DeepEvidenceMode <> debDisabled));
+    AddBomProperty(PropertyName('deep-evidence', 'executed'),
+      BoolToMetadataValue(ADeepEvidenceBuildResult.Executed));
+    AddBomProperty(PropertyName('deep-evidence', 'success'),
+      BoolToMetadataValue(ADeepEvidenceBuildResult.Success));
+    AddBomProperty(PropertyName('deep-evidence', 'exit-code'),
+      IntToStr(ADeepEvidenceBuildResult.ExitCode));
+    AddBomProperty(PropertyName('deep-evidence', 'message'), ADeepEvidenceBuildResult.Message);
+    AddBomProperty(PropertyName('deep-evidence', 'command-line'), ADeepEvidenceBuildResult.CommandLine);
+    AddBomProperty(PropertyName('assessment', 'warning-count'), IntToStr(AWarnings.Count));
+
+    AddComponentProperty(PropertyName('build', 'map-file'), EffectiveMapFilePath);
+    AddComponentProperty(PropertyName('build', 'platform'), AProjectInfo.Platform);
+    AddComponentProperty(PropertyName('build', 'configuration'), AProjectInfo.Configuration);
+    AddComponentProperty(PropertyName('build', 'dcu-mode'), DcuModeToMetadataValue);
+    AddComponentProperty(PropertyName('build', 'output-dir'), ABuildEvidence.Paths.OutputDir);
+    AddComponentProperty(PropertyName('build', 'dcu-output-dir'), ABuildEvidence.Paths.DcuOutputDir);
+    AddComponentProperty(PropertyName('build', 'dcp-output-dir'), ABuildEvidence.Paths.DcpOutputDir);
+    AddComponentProperty(PropertyName('build', 'bpl-output-dir'), ABuildEvidence.Paths.BplOutputDir);
+    AddComponentProperty(PropertyName('build', 'response-file'), ABuildEvidence.Paths.ResponseFilePath);
+    AddComponentProperty(PropertyName('build', 'evidence-item-count'),
+      IntToStr(ABuildEvidence.EvidenceItems.Count));
+    AddComponentProperty(PropertyName('build', 'search-path-count'),
+      IntToStr(ABuildEvidence.SearchPaths.Count));
+    AddComponentProperty(PropertyName('composition', 'resolved-unit-count'),
+      IntToStr(ACompositionEvidence.Units.Count));
+    AddComponentProperty(PropertyName('toolchain', 'product'), AProjectInfo.Toolchain.ProductName);
+    AddComponentProperty(PropertyName('toolchain', 'version'), AProjectInfo.Toolchain.Version);
+    AddComponentProperty(PropertyName('toolchain', 'build-version'), AProjectInfo.Toolchain.BuildVersion);
+    AddComponentProperty(PropertyName('toolchain', 'root-dir'), AProjectInfo.Toolchain.RootDir);
+
+    Result.Properties := LBomProperties.ToArray;
+    Result.ComponentProperties := LComponentProperties.ToArray;
+  finally
+    LComponentProperties.Free;
+    LBomProperties.Free;
+  end;
 end;
 
 function TDxComplyGenerator.GenerateHumanReadableReports(const AData: TComplianceReportData;
@@ -703,7 +819,8 @@ begin
 
       // Create writer and generate SBOM
       FSbomWriter := CreateWriter(LFormat);
-      LMetadata := BuildMetadata(FConfig);
+      LMetadata := BuildMetadata(FConfig, LProjectInfo, LBuildEvidence,
+        LCompositionEvidence, LReportedWarnings, LDeepEvidenceBuildResult);
 
       // Override metadata with project info if not specified
       if LMetadata.ProductName = '' then

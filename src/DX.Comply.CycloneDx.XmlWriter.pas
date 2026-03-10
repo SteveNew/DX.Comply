@@ -1,4 +1,4 @@
-/// <summary>
+﻿/// <summary>
 /// DX.Comply.CycloneDx.XmlWriter
 /// Generates CycloneDX 1.5 SBOM documents in XML format.
 /// </summary>
@@ -55,6 +55,7 @@ type
     procedure OpenTag(const ATag: string; const AAttributes: string = '');
     procedure CloseTag(const ATag: string);
     procedure AddElement(const ATag, AValue: string);
+    procedure AddPropertyElements(const AProperties: TArray<TSbomProperty>);
     procedure BuildMetadata(const AMetadata: TSbomMetadata; const AProjectInfo: TProjectInfo);
     procedure BuildComponent(const AArtefact: TArtefactInfo; const AIndex: Integer);
     procedure BuildComponents(const AArtefacts: TArtefactList);
@@ -125,6 +126,32 @@ begin
   AddLine('<' + ATag + '>' + EscapeXml(AValue) + '</' + ATag + '>');
 end;
 
+procedure TCycloneDxXmlWriter.AddPropertyElements(
+  const AProperties: TArray<TSbomProperty>);
+var
+  LHasProperties: Boolean;
+  LProperty: TSbomProperty;
+begin
+  LHasProperties := False;
+  for LProperty in AProperties do
+  begin
+    if Trim(LProperty.Name) = '' then
+      Continue;
+
+    if not LHasProperties then
+    begin
+      OpenTag('properties');
+      LHasProperties := True;
+    end;
+
+    AddLine('<property name="' + EscapeXml(LProperty.Name) + '">' +
+      EscapeXml(LProperty.Value) + '</property>');
+  end;
+
+  if LHasProperties then
+    CloseTag('properties');
+end;
+
 procedure TCycloneDxXmlWriter.BuildMetadata(const AMetadata: TSbomMetadata;
   const AProjectInfo: TProjectInfo);
 begin
@@ -134,6 +161,8 @@ begin
     AddElement('timestamp', AMetadata.Timestamp)
   else
     AddElement('timestamp', DateToISO8601(Now, False));
+
+  AddPropertyElements(AMetadata.Properties);
 
   // CycloneDX 1.5 XML uses <tools><tool> (not <tools><components>)
   OpenTag('tools');
@@ -156,6 +185,7 @@ begin
     AddElement('name', AMetadata.Supplier);
     CloseTag('supplier');
   end;
+  AddPropertyElements(AMetadata.ComponentProperties);
   CloseTag('component');
 
   CloseTag('metadata');
