@@ -1,4 +1,4 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <Base>True</Base>
         <AppType>Package</AppType>
@@ -43,7 +43,7 @@
         <DCC_ExeOutput>..\build\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_UnitSearchPath>..\src;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <DllSuffix>370</DllSuffix>
+        <DllSuffix>$(Auto)</DllSuffix>
         <GenDLL>true</GenDLL>
         <GenPackage>true</GenPackage>
         <VerInfo_Build>0</VerInfo_Build>

@@ -25,7 +25,7 @@
 {$DESCRIPTION 'DX.Comply IDE Integration Package'}
 {$DESIGNONLY}
 {$IMPLICITBUILD ON}
-{$LIBSUFFIX '370'}
+{$LIBSUFFIX AUTO}
 
 requires
   rtl,
