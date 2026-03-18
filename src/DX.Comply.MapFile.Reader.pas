@@ -29,9 +29,13 @@ type
     /// </summary>
     class procedure AddUniqueUnitName(const AUnitName: string; var AUnitNames: TArray<string>); static;
     /// <summary>
-    /// Tries to extract a unit name from a detailed map line-numbers section.
+    /// Tries to extract a unit name from a "Line numbers for" section header.
     /// </summary>
-    class function TryExtractUnitName(const ALine: string; out AUnitName: string): Boolean; static;
+    class function TryExtractLineNumbersUnitName(const ALine: string; out AUnitName: string): Boolean; static;
+    /// <summary>
+    /// Tries to extract a unit name from a "Detailed map of segments" entry (M=UnitName).
+    /// </summary>
+    class function TryExtractSegmentUnitName(const ALine: string; out AUnitName: string): Boolean; static;
   public
     /// <summary>
     /// Reads unique unit names from the specified detailed map file.
@@ -80,7 +84,9 @@ begin
     LLines.LoadFromFile(AMapFilePath);
     for LLine in LLines do
     begin
-      if TryExtractUnitName(LLine, LUnitName) then
+      if TryExtractLineNumbersUnitName(LLine, LUnitName) then
+        AddUniqueUnitName(LUnitName, Result)
+      else if TryExtractSegmentUnitName(LLine, LUnitName) then
         AddUniqueUnitName(LUnitName, Result);
     end;
   finally
@@ -88,7 +94,7 @@ begin
   end;
 end;
 
-class function TMapFileReader.TryExtractUnitName(const ALine: string;
+class function TMapFileReader.TryExtractLineNumbersUnitName(const ALine: string;
   out AUnitName: string): Boolean;
 var
   LMatch: TMatch;
@@ -96,6 +102,19 @@ begin
   AUnitName := '';
   LMatch := TRegEx.Match(ALine,
     '^\s*Line numbers for\s+([A-Za-z0-9_\.]+)\s*\(', [roIgnoreCase]);
+  Result := LMatch.Success;
+  if Result then
+    AUnitName := Trim(LMatch.Groups[1].Value);
+end;
+
+class function TMapFileReader.TryExtractSegmentUnitName(const ALine: string;
+  out AUnitName: string): Boolean;
+var
+  LMatch: TMatch;
+begin
+  AUnitName := '';
+  LMatch := TRegEx.Match(ALine,
+    '\bM=([A-Za-z0-9_\.]+)\b');
   Result := LMatch.Success;
   if Result then
     AUnitName := Trim(LMatch.Groups[1].Value);
