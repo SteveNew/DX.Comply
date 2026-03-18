@@ -1,105 +1,77 @@
 # DX.Comply
 
-**Generate software manifests for your Delphi projects — with one click.**
+[![Delphi Supported Versions](https://img.shields.io/badge/Delphi-11%20|%2012%20|%2013-blue?logo=delphi)](https://www.embarcadero.com/products/delphi)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![CycloneDX](https://img.shields.io/badge/SBOM-CycloneDX%201.5-informational?logo=owasp)](https://cyclonedx.org/)
+[![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey?logo=windows)](https://www.microsoft.com/windows)
+[![EU CRA](https://img.shields.io/badge/EU%20CRA-2024%2F2847-orange)](https://eur-lex.europa.eu/eli/reg/2024/2847/oj/eng)
+
+**Generate Software Bills of Materials for your Delphi projects — with one click.**
 
 > Built for Delphi developers. Designed for compliance. Ready for the EU Cyber Resilience Act.
 
 ---
 
-## TL;DR
+## Why DX.Comply?
 
-The EU Cyber Resilience Act (CRA) — in force since December 2024 — requires software vendors to document what is inside their products. Full compliance is mandatory by December 2027.
-DX.Comply generates that document — a *Software Bill of Materials* — directly from your RAD Studio project in one click, together with optional human-readable Markdown and HTML reports for audit and review workflows.
+The EU **Cyber Resilience Act (CRA)** requires software vendors to document what is inside their products. Full compliance is mandatory by **December 2027**.
+
+DX.Comply generates that documentation — a *Software Bill of Materials* (SBOM) — directly from your RAD Studio project in one click, together with human-readable HTML and Markdown reports for audit and review workflows.
 
 **You generate it. You archive it. You never have to submit it anywhere.**
 
-Current implementation status:
-- CycloneDX JSON and XML SBOM generation are available
-- human-readable Markdown and HTML companion reports are available
-- MAP-first Deep-Evidence seeding and explicit Deep-Evidence build orchestration are implemented
-- build evidence, hierarchical unit resolution, and origin classification are implemented
-- separate evidence sidecar output is not shipped because the formal evidence is embedded in the SBOM/report output
-
-See `docs/CurrentStatus.md` for the detailed technical handover state.
-
-→ [Jump to Quick Start](#quick-start)
+> **SBOM** = a structured list of every component, file, and dependency in your software, including versions and checksums. Think of it as the ingredient list on a food label — for your application.
 
 ---
 
-## The problem, in plain language
+## Screenshots
 
-When you ship software to customers or the market, regulations increasingly require you to answer a simple question:
-**"What exactly is inside your product?"**
+*Generating an SBOM for the Embarcadero AlienInvasion sample project:*
 
-This means: Which files does your application consist of? Which third-party packages, libraries, or components does it use? What versions? With which cryptographic fingerprints?
-
-Manually maintaining such a list is tedious and error-prone — especially across releases. **DX.Comply automates this entirely**, directly from your RAD Studio project.
-
----
-
-## The EU Cyber Resilience Act (CRA) — what it means for you
-
-**Regulation (EU) 2024/2847** (Cyber Resilience Act) entered into force on **10 December 2024**. If you place software or hardware with a digital component on the EU market — as an ISV, product company, or enterprise — you will be required to:
-
-- document the software components in your product (**SBOM** — see below)
-- manage and disclose vulnerabilities
-- provide security updates throughout the support lifecycle
-
-**Key dates:**
-- **11 September 2026** — Vulnerability and incident reporting obligations begin (Article 14). Applies to all products already on the market.
-- **11 December 2027** — Full CRA application date (Article 71). All products placed on the EU market must fully comply.
-
-**DX.Comply handles the SBOM part.** The CRA requires manufacturers to identify and document software components — at minimum all top-level dependencies (Annex I, Part II, point 1). DX.Comply generates a machine-readable, standards-compliant *Software Bill of Materials* directly from your Delphi project — suitable for audits, customers, and regulatory submissions.
-
-> **SBOM** (Software Bill of Materials) is simply a structured list of every component, file, and dependency in your software, including their versions and checksums. Think of it as the ingredient list on a food label — for your application.
+| Build Confirmation | Progress & Deep-Evidence Build | HTML Compliance Report |
+|:---:|:---:|:---:|
+| ![Build Confirmation](docs/Screenshot.png) | ![Progress](docs/Screenshot2.png) | ![Report](docs/Screenshot3.png) |
 
 ---
 
-## What exactly must I do? (CRA compliance at a glance)
+## SBOM Output Example
 
-The CRA applies to you if you place software products on the EU market — regardless of where you or your company is based. "Placing on the market" means selling, distributing, or otherwise making your product available to users in the EU.
+DX.Comply produces standards-compliant **CycloneDX 1.5** SBOMs. Each linked unit is emitted as a `library` component with SHA-256 hash and origin classification:
 
-Here is a plain-language overview of what the CRA requires from software manufacturers:
-
-| # | Obligation | What it means in practice | DX.Comply |
-|---|---|---|:---:|
-| 1 | Secure-by-design | Build security into your development process from the start (threat modelling, secure defaults, least privilege) | — |
-| 2 | SBOM | Generate and keep a machine-readable list of all software components shipped with your product | ✔️ |
-| 3 | Vulnerability handling | Track known vulnerabilities in your components; patch and communicate them proactively | — |
-| 4 | Incident reporting | Report actively exploited vulnerabilities to ENISA within 24 hours — **mandatory from 11 September 2026** (Article 14) | — |
-| 5 | Technical documentation | Prepare and retain all compliance documentation for at least **10 years** (Article 13) | partial ¹ |
-| 6 | Conformity assessment | For higher-risk products: formal third-party audit and CE marking | — |
-
-> ¹ DX.Comply generates the SBOM artefact. Archiving and versioning it is your responsibility.
-
-### The SBOM obligation — key clarifications
-
-**You do NOT submit the SBOM anywhere.**
-
-There is no EU portal, no registration process, and no proactive submission required. The SBOM is part of your *technical documentation* — you generate it per release, keep it, and make it available only in two situations:
-
-- **To market surveillance authorities** — only if they formally request it (Article 52). This is an inspection right, not a submission requirement.
-- **To end users / customers** — entirely **optional** (Annex II, Part I, point 9). If you choose to share it, you must document where it can be accessed.
-
-### What counts as a valid SBOM?
-
-The CRA requires (Annex I, Part II, point 1):
-
-- Machine-readable format
-- A commonly-used format — CycloneDX and SPDX are both accepted
-- Coverage of at least the **top-level (direct) dependencies** of your product
-
-Germany's Federal Office for Information Security (BSI) has published the first national technical interpretation: **BSI TR-03183-2** (v2.1, August 2025). It specifies:
-
-- Format: **CycloneDX 1.6+** or **SPDX 3.0.1+** (JSON or XML)
-- Checksums: **SHA-512** per component
-- One SBOM per software version; no vulnerability data inside the SBOM (use CSAF/VEX for that)
-
-> **Note:** BSI TR-03183-2 is Germany's national interpretation of the CRA SBOM requirement. The EU Commission may issue implementing acts that supersede or align national guidelines. DX.Comply tracks these developments.
-
-### What DX.Comply covers
-
-DX.Comply handles **obligation #2** — generating a standards-compliant SBOM directly from your Delphi/RAD Studio project. All other obligations (secure-by-design, vulnerability management, incident reporting, CE marking) are outside its scope.
+```json
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "metadata": {
+    "component": {
+      "type": "application",
+      "name": "AlienInvasion",
+      "version": "1.0.0.0"
+    }
+  },
+  "components": [
+    {
+      "type": "application",
+      "name": "AlienInvasion.exe",
+      "hashes": [
+        { "alg": "SHA-256", "content": "d0be8d3ad469b93c...f6cee44" }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "System.SysUtils.dcu",
+      "hashes": [
+        { "alg": "SHA-256", "content": "a1c9f3e7b2d4..." }
+      ],
+      "properties": [
+        { "name": "net.developer-experts.dx-comply:origin", "value": "Embarcadero RTL" },
+        { "name": "net.developer-experts.dx-comply:evidence", "value": "DCU" },
+        { "name": "net.developer-experts.dx-comply:confidence", "value": "Strong" }
+      ]
+    }
+  ]
+}
+```
 
 ---
 
@@ -107,98 +79,53 @@ DX.Comply handles **obligation #2** — generating a standards-compliant SBOM di
 
 ### Option A — RAD Studio IDE (recommended)
 
-Get your first SBOM in under a minute:
+1. Install the `DX.Comply.IDE` design-time package.
+2. **Open your project** in RAD Studio.
+3. Choose **Project > Generate SBOM (DX.Comply)** from the main menu.
+4. Confirm the Deep-Evidence build dialog — DX.Comply builds your project with detailed MAP generation, scans all evidence, and produces the SBOM.
+5. Done. Your `bom.json`, `bom.report.html`, and `bom.report.md` are in your project folder.
 
-1. **Open your project** in RAD Studio as usual.
-2. **Build your project** at least once so the output artefacts exist.
-3. In the main menu, choose **Project → Generate SBOM (DX.Comply)**.
-4. A dialog opens — select your output format (start with **CycloneDX JSON**) and confirm.
-5. Done. Your `bom.json` is in your project folder.
-
-```
-MyApp/
-├── MyApp.dproj
-├── bom.json          ← your SBOM, ready to archive with this release
-└── ...
-```
-
-The IDE message window shows a log of what was scanned and any warnings.
-
----
-
-### Option B — Command line / CI/CD
-
-Install the `dxcomply` CLI and integrate it into your build pipeline:
+### Option B — Command line / CI
 
 ```bash
-# Generate a CycloneDX JSON SBOM
 dxcomply --project=MyApp.dproj --format=cyclonedx-json --output=bom.json
-
-# Use a project config file
-dxcomply --ci --config=.dxcomply.json
 ```
 
-**GitHub Actions example:**
-```yaml
-- name: Generate SBOM
-  run: dxcomply --project=src/MyApp.dproj --format=cyclonedx-json --output=bom.json
-
-- name: Upload SBOM
-  uses: actions/upload-artifact@v4
-  with:
-    name: sbom
-    path: bom.json
-```
-
----
-
-### What to do with your SBOM
-
-Once generated, there is no submission process — you simply keep it. Here is what you should do:
-
-1. **Archive it with each release.**
-   Store `bom.json` alongside your release artefacts (installer, binaries, changelog). Name it clearly, e.g. `bom-v2.1.0.json`. One SBOM per shipped version.
-
-2. **Keep it for at least 10 years.**
-   The CRA requires technical documentation — including the SBOM — to be retained for at least 10 years after a product version is placed on the market (Article 13). A release archive folder or a document management system both work fine.
-
-3. **Be ready to hand it over if asked.**
-   Market surveillance authorities can formally request your technical documentation (Article 52). This is rare and requires a reasoned request — but you should be able to produce the SBOM for any released version within a reasonable time.
-
-4. **Sharing with customers is your choice.**
-   The CRA does not require you to publish or hand the SBOM to end users. If you do choose to share it (e.g. in a trust portal or on your website), you must document where it can be accessed (Annex II, Part I, point 9).
-
-> **In short:** Generate → archive → retain. That is all the CRA asks of you on the SBOM front.
+See [docs/CI-Integration.md](docs/CI-Integration.md) for GitHub Actions examples and CI configuration.
 
 ---
 
 ## What DX.Comply analyses
 
-For each build, DX.Comply currently combines project metadata, build evidence,
-and build-output artefact scanning. When a detailed Delphi MAP file is present
-— or when Deep Evidence is configured to create one explicitly — it is treated
-as a primary membership source for the units actually linked into the result.
+| Evidence source | Details |
+|---|---|
+| **Project metadata** | Name, version, platform, configuration, DllSuffix |
+| **Deep-Evidence build** | Triggers a dedicated build with `DCC_MapFile=3` to produce a detailed MAP file |
+| **MAP file analysis** | Extracts all linked units from segment entries and line-number sections |
+| **Unit resolution** | Resolves each unit to its source/DCU/BPL file with SHA-256 hash |
+| **Origin classification** | Classifies each unit as Embarcadero RTL, VCL, FMX, Local project, or Third party |
+| **Build artefacts** | Scans output directory for `.exe`, `.dll`, `.bpl`, `.dcp` with SHA-256 fingerprints |
+| **Compiler evidence** | Parses `.cfg` and `.rsp` files for effective search paths and unit scopes |
 
-| What                        | Details                                      |
-|-----------------------------|----------------------------------------------|
-| Project metadata            | Name, version, platform, configuration       |
-| Build evidence              | Search paths, unit scopes, runtime packages, expected MAP path |
-| MAP-derived unit membership | First seed set for units proven by linker evidence when a detailed `.map` exists |
-| Build artefacts             | `.exe`, `.dll`, `.bpl`, `.dcp`, resources    |
-| Third-party package hints   | Runtime packages and detected library roots  |
-| Cryptographic fingerprints  | SHA-256 hash for every file                  |
-| Dependency graph            | Basic component relationships                |
+---
 
-Important limitation: the current engine already resolves unit membership and
-origin classification from project metadata, build evidence, and MAP data, but
-the accuracy of the result still depends on the quality of the available Delphi
-build artefacts and search-path information.
+## Output formats
+
+| Format | Version | Description |
+|---|---|---|
+| **CycloneDX JSON** | 1.5 | Default — standard SBOM format for audits and tooling |
+| **CycloneDX XML** | 1.5 | XML variant for XML-based toolchains |
+| **SPDX JSON** | 2.3 | Linux Foundation ecosystem |
+| **HTML Report** | — | Human-readable compliance report with unit evidence, artefacts, validation |
+| **Markdown Report** | — | Lightweight companion for code review and archival |
+
+All generated SBOMs are validated against the official schema before being written to disk.
 
 ---
 
 ## Configuration
 
-Add a `.dxcomply.json` to your project folder to control the scan:
+Add a `.dxcomply.json` to your project folder:
 
 ```json
 {
@@ -207,103 +134,90 @@ Add a `.dxcomply.json` to your project folder to control the scan:
   "include": ["build/**"],
   "exclude": ["build/**/Debug/**", "**/*.dcu"],
   "deepEvidence": {
-    "build": false,
+    "build": true,
     "delphiVersion": 13
   },
   "product": {
     "name": "My Application",
     "version": "2.1.0",
     "supplier": "Acme GmbH"
+  },
+  "report": {
+    "enabled": true,
+    "format": "both"
   }
 }
 ```
 
-### Deep Evidence configuration
+---
 
-Current config support includes:
+## The EU Cyber Resilience Act — what you need to know
 
-- `deepEvidence.build`
-  - `false`: consume existing build evidence only
-  - `true`: try to trigger an explicit Deep-Evidence build before evidence collection
-- `deepEvidence.delphiVersion`
-  - optional Delphi major version to forward into the build script
+**Regulation (EU) 2024/2847** entered into force on **10 December 2024**. If you place software on the EU market, you must:
 
-The current implementation uses the shared `build/DelphiBuildDPROJ.ps1` script
-and appends additional MSBuild properties to force detailed MAP generation.
-CLI-specific Deep-Evidence switches are not exposed yet; use `.dxcomply.json`
-for this mode for now.
+- Document software components in your product (SBOM)
+- Manage and disclose vulnerabilities
+- Provide security updates throughout the support lifecycle
+
+| Date | Milestone |
+|---|---|
+| **11 Sep 2026** | Vulnerability and incident reporting obligations begin |
+| **11 Dec 2027** | Full CRA compliance mandatory for all products on the EU market |
+
+### What counts as a valid SBOM?
+
+The CRA requires (Annex I, Part II):
+- Machine-readable format (CycloneDX or SPDX)
+- Coverage of at least top-level dependencies
+- One SBOM per software version
+
+**You do NOT submit the SBOM anywhere.** You generate it per release, archive it, and make it available only if a market surveillance authority formally requests it.
+
+> DX.Comply handles the SBOM obligation. Other CRA requirements (secure-by-design, vulnerability management, incident reporting) are outside its scope.
 
 ---
 
-## Output formats
+## What to do with your SBOM
 
-| Format            | Version | Use case                                      | Available in    |
-|-------------------|---------|-----------------------------------------------|-----------------|
-| CycloneDX JSON    | 1.5     | Default — audits, tools, CRA submissions      | Community + Pro |
-| CycloneDX XML     | 1.5     | XML-based toolchains                          | Community + Pro |
-| SPDX JSON         | 2.3     | Linux Foundation ecosystem, some EU portals   | Pro             |
-
-All generated SBOMs are validated against the official schema before being written to disk.
-
----
-
-## Features
-
-| Feature                         | Community (MIT) | Pro |
-|---------------------------------|:--------------:|:---:|
-| RAD Studio IDE integration      | ✔️             | ✔️  |
-| CLI (`dxcomply`)                | ✔️             | ✔️  |
-| CycloneDX JSON + XML            | ✔️             | ✔️  |
-| SHA-256 artefact fingerprints   | ✔️             | ✔️  |
-| SPDX JSON export                | —              | ✔️  |
-| SBOM diff between releases      | —              | ✔️  |
-| HTML compliance report          | —              | ✔️  |
-| Policy checks (allow/deny)      | —              | ✔️  |
-| CVE feed integration            | —              | ✔️  |
-| Enterprise templates            | —              | ✔️  |
-| Priority support                | —              | ✔️  |
+1. **Archive it with each release** — store `bom.json` alongside your release artefacts.
+2. **Retain for at least 10 years** — required by CRA Article 13.
+3. **Be ready to hand it over if asked** — market surveillance authorities can request it (Article 52).
+4. **Sharing with customers is optional** — your choice (Annex II, Part I, point 9).
 
 ---
 
 ## Requirements
 
-- **RAD Studio / Delphi 11 Alexandria** or newer (for IDE plugin)
-- **Windows** (build host); CLI output consumed on any platform
+- **RAD Studio / Delphi 11 Alexandria** or newer
+- **Windows** build host
 - No internet connection required — all processing is local
 
 ---
 
-## Roadmap
+## Documentation
 
-| Version | Highlights                                              | Status   |
-|---------|---------------------------------------------------------|----------|
-| v1.0    | IDE plugin, CLI, CycloneDX JSON/XML, artefact scan, build-evidence foundation, MAP-first Deep-Evidence foundation | In development |
-| v1.1    | SPDX export, HTML report, SBOM diff                    | Planned  |
-| v2.0    | CVE feed integration, licence heuristics, policy checks | Planned  |
+| Document | Description |
+|---|---|
+| [Architecture](docs/Architecture.md) | Engine pipeline, component overview, unit origin classification |
+| [CI Integration](docs/CI-Integration.md) | Command-line usage, GitHub Actions examples, CI configuration |
 
 ---
 
 ## License
 
-The **Community edition** is open source under the [MIT License](LICENSE).  
-The **Pro edition** is available as a commercial subscription.
+Open source under the [MIT License](LICENSE).
+Copyright 2026 Olaf Monien.
 
 ---
 
 ## Official EU Sources
 
-All CRA compliance claims in this project are based on the following official EU publications:
-
 | Source | Link |
-|--------|------|
-| Regulation (EU) 2024/2847 — full text (EUR-Lex) | https://eur-lex.europa.eu/eli/reg/2024/2847/oj/eng |
-| EC Digital Strategy — CRA overview | https://digital-strategy.ec.europa.eu/en/policies/cyber-resilience-act |
-| ENISA — SBOM Landscape Analysis | https://www.enisa.europa.eu/publications/sbom-analysis |
+|---|---|
+| Regulation (EU) 2024/2847 — full text | [EUR-Lex](https://eur-lex.europa.eu/eli/reg/2024/2847/oj/eng) |
+| EC Digital Strategy — CRA overview | [EC](https://digital-strategy.ec.europa.eu/en/policies/cyber-resilience-act) |
+| ENISA — SBOM Landscape Analysis | [ENISA](https://www.enisa.europa.eu/publications/sbom-analysis) |
 
 ---
 
-## About
-
 DX.Comply is developed by **Olaf Monien** as part of the [DX component suite](https://github.com/omonien).
-Copyright © 2026 Olaf Monien.
-
