@@ -185,6 +185,11 @@ var
   /// finalization. Initialised to -1 so that a failed registration is detectable.
   /// </summary>
   GWizardIndex: Integer = -1;
+  /// <summary>
+  /// Handle returned by IOTAAboutBoxServices.AddPluginInfo; required for removal
+  /// in finalization. Initialised to -1 so that a failed registration is detectable.
+  /// </summary>
+  GAboutBoxIndex: Integer = -1;
 
 const
   cProjectMenuCaption = 'DX.Comply - CRA Compliance';
@@ -640,6 +645,88 @@ begin
   Result := [wsEnabled];
 end;
 
+{ Splash screen and About box registration }
+
+{$R DX.Comply.IDE.Splash.res}
+
+const
+  cSplashTitle = 'DX.Comply - CRA Compliance Documentation';
+  cSplashLicenseStatus = 'Open Source - MIT License';
+  cAboutDescription =
+    'Generates CycloneDX Software Bills of Materials (SBOMs) directly from ' +
+    'RAD Studio projects for EU Cyber Resilience Act compliance.';
+
+/// <summary>
+/// Loads the 48x48 splash bitmap from the embedded resource.
+/// The caller receives ownership of the returned HBITMAP handle.
+/// Returns 0 if the resource cannot be loaded.
+/// </summary>
+function CreateSplashBitmap: HBITMAP;
+var
+  LBmp: TBitmap;
+begin
+  Result := 0;
+  LBmp := TBitmap.Create;
+  try
+    try
+      LBmp.LoadFromResourceName(HInstance, 'DXCOMPLYSPLASH');
+      Result := LBmp.ReleaseHandle;
+    except
+      Result := 0;
+    end;
+  finally
+    LBmp.Free;
+  end;
+end;
+
+/// <summary>
+/// Registers the DX.Comply plugin bitmap on the IDE splash screen.
+/// </summary>
+procedure RegisterSplashScreen;
+var
+  LSplashServices: IOTASplashScreenServices;
+  LBitmap: HBITMAP;
+begin
+  if not Supports(SplashScreenServices, IOTASplashScreenServices, LSplashServices) then
+    Exit;
+
+  LBitmap := CreateSplashBitmap;
+  if LBitmap <> 0 then
+    LSplashServices.AddPluginBitmap(cSplashTitle, LBitmap, False, cSplashLicenseStatus);
+end;
+
+/// <summary>
+/// Registers DX.Comply in the IDE Help &gt; About &gt; Installed Products list.
+/// </summary>
+procedure RegisterAboutBox;
+var
+  LAboutServices: IOTAAboutBoxServices;
+  LBitmap: HBITMAP;
+begin
+  if not Supports(BorlandIDEServices, IOTAAboutBoxServices, LAboutServices) then
+    Exit;
+
+  LBitmap := CreateSplashBitmap;
+  if LBitmap <> 0 then
+    GAboutBoxIndex := LAboutServices.AddPluginInfo(
+      cSplashTitle, cAboutDescription, LBitmap, False, cSplashLicenseStatus);
+end;
+
+/// <summary>
+/// Removes the DX.Comply entry from the IDE About box.
+/// </summary>
+procedure UnregisterAboutBox;
+var
+  LAboutServices: IOTAAboutBoxServices;
+begin
+  if (GAboutBoxIndex >= 0) and
+    Supports(BorlandIDEServices, IOTAAboutBoxServices, LAboutServices) then
+  begin
+    LAboutServices.RemovePluginInfo(GAboutBoxIndex);
+    GAboutBoxIndex := -1;
+  end;
+end;
+
 { Register }
 
 procedure Register;
@@ -649,6 +736,8 @@ begin
 end;
 
 initialization
+  RegisterSplashScreen;
+  RegisterAboutBox;
   GWizardIndex := (BorlandIDEServices as IOTAWizardServices).AddWizard(TDxComplyWizard.Create);
 
 finalization
@@ -657,5 +746,6 @@ finalization
     (BorlandIDEServices as IOTAWizardServices).RemoveWizard(GWizardIndex);
     GWizardIndex := -1;
   end;
+  UnregisterAboutBox;
 
 end.

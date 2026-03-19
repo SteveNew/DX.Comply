@@ -36,6 +36,8 @@ DX.Comply generates that documentation — a *Software Bill of Materials* (SBOM)
 
 ## SBOM Output Example
 
+> **See it for yourself:** [Full example SBOM (JSON)](docs/examples/AlienInvasion.bom.json) · [Full example HTML report](docs/examples/AlienInvasion.bom.report.html) — generated from the Embarcadero *AlienInvasion* sample project.
+
 DX.Comply produces standards-compliant **CycloneDX 1.5** SBOMs. Each linked unit is emitted as a `library` component with SHA-256 hash and origin classification:
 
 ```json
@@ -200,6 +202,8 @@ The CRA requires (Annex I, Part II):
 |---|---|
 | [Architecture](docs/Architecture.md) | Engine pipeline, component overview, unit origin classification |
 | [CI Integration](docs/CI-Integration.md) | Command-line usage, GitHub Actions examples, CI configuration |
+| [Example SBOM (JSON)](docs/examples/AlienInvasion.bom.json) | Full CycloneDX 1.5 SBOM generated from the AlienInvasion sample |
+| [Example HTML Report](docs/examples/AlienInvasion.bom.report.html) | Human-readable compliance report for the same project |
 
 ---
 

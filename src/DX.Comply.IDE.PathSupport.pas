@@ -40,6 +40,12 @@ begin
   SetLength(Result, LLength);
 end;
 
+const
+  /// <summary>
+  /// Project-specific marker file used to identify the DX.Comply repository root.
+  /// </summary>
+  cRepositoryMarker = 'DX.Comply.groupproj';
+
 function FindDXComplyRepositoryRoot: string;
 var
   LCurrentDirectory: string;
@@ -49,8 +55,7 @@ begin
   LCurrentDirectory := ExtractFileDir(GetDXComplyModuleFilePath);
   while LCurrentDirectory <> '' do
   begin
-    if TFile.Exists(TPath.Combine(LCurrentDirectory, 'README.md')) and
-      TDirectory.Exists(TPath.Combine(LCurrentDirectory, 'src')) then
+    if TFile.Exists(TPath.Combine(LCurrentDirectory, cRepositoryMarker)) then
       Exit(LCurrentDirectory);
 
     LParentDirectory := ExtractFileDir(LCurrentDirectory);
